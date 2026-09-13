@@ -1,0 +1,3 @@
+# Netlify is rejected as the deployment target
+
+Netlify's credit-based Free plan grants 300 credits per month with a hard limit and no recharge option, and a production deploy costs 15 credits — a ceiling of twenty production deploys. A daily Issue needs roughly thirty, so the pipeline would exhaust the allowance and every project on the account would be paused until the next billing cycle. Cloudflare Workers Static Assets serves static requests free and without quota, and the build produces nothing host-specific, so moving later is a deployment change rather than a rewrite.

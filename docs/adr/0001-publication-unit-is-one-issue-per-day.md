@@ -1,0 +1,3 @@
+# Publication unit is one Issue per day
+
+We publish one dated Issue per day containing every Category, rather than one article per Category or a continuous feed of Items. A ten-minute read forces an editorial decision about what is worth including, and that decision only exists at the level of the whole Issue; a per-Category structure also produces Categories that are empty on some days, which invites filler. Per-Category articles can be derived later by rendering the Categories of an Issue separately, because every Item is already categorised.
