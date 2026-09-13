@@ -1,0 +1,146 @@
+```json
+{
+  "findings": [
+    {
+      "claim": "Astro's current stable major is Astro 7; the latest published release is 7.3.2.",
+      "detail": "npm registry dist-tags for the `astro` package show `latest: 7.3.2`, published 2026-09-08. Astro 7.0.0 was published 2026-06-22 (matches the Astro 7.0 release blog post dated June 22, 2026). The previous major, Astro 6.0.0, was published 2026-03-10. Astro 7.3.2 declares engines: node >=22.12.0, npm >=9.6.5. (Note: some third-party SEO/aggregator articles misstate the Astro 6 date as February 2026 — npm is authoritative.)",
+      "source_url": "https://registry.npmjs.org/astro"
+    },
+    {
+      "claim": "Astro 7's headline changes: Rust compiler as the only compiler, queued rendering default, Vite 8/Rolldown, stable route caching, Advanced Routing (src/fetch.ts reserved), and removal of several experimental flags.",
+      "detail": "The Astro 7.0 release post lists: .astro compiler rewritten in Rust; Markdown/MDX via a new Rust pipeline; queue-based rendering engine (~2.4x faster); Vite 8 with Rolldown; stable route caching with a platform-agnostic cache API; Advanced Routing giving a src/fetch.ts entrypoint. The v7 upgrade guide marks experimental flags logger, queuedRendering, rustCompiler, advancedRouting and cache as now stable (move cache/routeRules out of experimental). The Rust compiler is stricter: unclosed tags now error and semantically invalid HTML is no longer auto-corrected.",
+      "source_url": "https://docs.astro.build/en/guides/upgrade-to/v7/"
+    },
+    {
+      "claim": "Recommended content definition is the Content Layer API (Astro 5+) using defineCollection() in src/content.config.ts with a loader and optional Zod schema.",
+      "detail": "Astro docs: all build-time collections are defined in src/content.config.ts (.js/.mjs also supported) via defineCollection(), exporting a single `collections` object. Each collection needs a build-time loader and (optionally, but recommended) a Zod schema for validation/types. Imports are from `astro:content` (defineCollection, getCollection, getEntry, render) and loaders from `astro/loaders` (glob, file); Zod via `astro/zod`. Astro 5.0 deprecated the v2.0 legacy collections API (type: 'content' | 'data'); legacy collections can still run behind the legacy.collections flag but docs recommend migrating.",
+      "source_url": "https://docs.astro.build/en/guides/content-collections/"
+    },
+    {
+      "claim": "Built-in loaders are glob() for directories of files and file() for a single JSON/YAML/TOML file; glob() auto-generates ids from filenames.",
+      "detail": "glob() fetches entries from directories of Markdown, MDX, Markdoc, JSON, YAML, or TOML files anywhere on the filesystem, taking a micromatch `pattern` and a `base` path; ids are auto-generated URL-friendly from filenames (overridable via frontmatter `slug` or the generateId() helper). file() loads multiple entries from one file (JSON array with `id`, YAML, or TOML tables) and does not auto-generate ids. Custom parsers are supported for other formats (e.g. CSV with csv-parse).",
+      "source_url": "https://docs.astro.build/en/reference/content-loader-reference/"
+    },
+    {
+      "claim": "Live content collections are STABLE (not experimental) and were added in astro@6.0.0; they fetch data at request time.",
+      "detail": "The Astro content-collections API reference marks defineLiveCollection() and the live loader/schema as 'Added in: astro@6.0.0'. Live collections are defined in a separate src/live.config.ts using defineLiveCollection() and queried with getLiveCollection()/getLiveEntry(). They are documented in the main content collections guide with no experimental flag, and the old /reference/experimental-flags/live-content-collections URL now redirects to the main guide. They do NOT appear in the current experimental-flags list (which is only: client-prerender, collection-storage, content-intellisense, incremental-build, svg-optimization, chrome-devtools-workspace).",
+      "source_url": "https://docs.astro.build/en/reference/modules/astro-content"
+    },
+    {
+      "claim": "Live content collections have real limitations and require an on-demand-rendering adapter; docs prefer build-time collections whenever possible.",
+      "detail": "Documented limitations vs build-time collections: no MDX support at runtime; no image optimization at runtime; data fetched on each request (unless cached); no data-store persistence. Docs guidance: 'We suggest using build-time content collections whenever possible, and using live collections when your content needs updating in real time and the performance tradeoffs are acceptable.' Live collections additionally require an adapter configured for on-demand rendering. Unlike build-time collections there are NO built-in live loaders — you write a custom live loader or use a third-party one.",
+      "source_url": "https://docs.astro.build/en/guides/content-collections/"
+    },
+    {
+      "claim": "A programmatic job can simply write .md/MDX/JSON files into the content directory before the build; the glob() loader picks them up and rebuilds the data store on each build.",
+      "detail": "Astro syncs the content layer automatically: running astro dev, astro build or astro check also runs the `sync` command (generating types and updating the content data store). The glob() loader, by default, renders each Markdown entry during sync and stores the resulting HTML in the data store (cacheable across builds). A data source that changes content must trigger a new build ('If a data source needs to update a collection it must do this by triggering a new build'). So a Node script that writes files then runs `astro build` is the standard pattern — the committed source files are the source of truth and the data store is derived.",
+      "source_url": "https://docs.astro.build/en/reference/cli-reference/"
+    },
+    {
+      "claim": "The content-layer data store defaults to a single file .astro/data-store.json; an experimental chunked mode exists for large collections.",
+      "detail": "Experimental 'collection storage' flag (astro@7.1.0): default is 'single-file' at .astro/data-store.json; setting collectionStorage: \"chunked\" splits data across multiple files inside .astro/data-store/, creating a new chunk when the current one exceeds 20 MB, with a configurable chunkSize. Docs state this option 'is recommended when deploying to platforms that have a size limit for individual assets.'",
+      "source_url": "https://docs.astro.build/en/reference/experimental-flags/collection-storage/"
+    },
+    {
+      "claim": "Experimental incremental static builds (astro@7.2.0) can skip re-rendering unchanged pages, but the cache must be restored in CI.",
+      "detail": "With experimental.incrementalBuild: true, a static page from getStaticPaths() is skipped if its cacheKey (you supply it, e.g. entry.digest) and its module dependency graph are unchanged. Astro stores the incremental cache in cacheDir (default node_modules/.astro/, per the config reference) holding the build manifest and reusable page output. 'For pages to be skipped in a continuous integration environment, cacheDir must be restored before running astro build... Cache and restore this single directory between builds.' astro build --force re-renders everything. Limitations: disabled when build.concurrency > 1; server-island pages re-render unless ASTRO_KEY is stable; middleware changes don't invalidate cached pages.",
+      "source_url": "https://docs.astro.build/en/reference/experimental-flags/incremental-build/"
+    },
+    {
+      "claim": "Output modes are now only 'static' (default) and 'server'; 'hybrid' no longer exists.",
+      "detail": "The current configuration reference types `output` as `'static' | 'server'` with default `'static'`: 'static' prerenders all pages by default; 'server' server-renders all pages by default. Per-route control is via `export const prerender = false` (opt out in static mode) or `export const prerender = true` (opt in in server mode). The old `output: 'hybrid'` value (present in v4 docs) is gone — 'mostly static with some on-demand routes' is now just static mode with per-page prerender=false. An adapter is required only for on-demand rendering (or for adapter-enabled platform features like Netlify Image CDN / server islands).",
+      "source_url": "https://docs.astro.build/en/reference/configuration-reference/"
+    },
+    {
+      "claim": "@astrojs/cloudflare is at major v14 (latest 14.3.1) and targets Astro 7 / Wrangler 4; it is not needed for a purely static site.",
+      "detail": "The @astrojs/cloudflare docs page header shows v14.3.1; npm shows latest 14.3.1 (2026-09-08) with peerDependencies { astro: ^7.2.0, wrangler: ^4.125.0 }. It 'allows Astro to deploy your on-demand rendered routes and features to Cloudflare... including server islands, actions, and sessions.' Docs state: 'If you're using Astro as a static site builder, you don't need an adapter.' Static-asset routing is based on the build directory (./dist); unmatched requests fall back to the Worker for on-demand rendering. Options include imageService, sessionKVBindingName (KV binding SESSION), imagesBindingName (IMAGES binding), and prerenderEnvironment ('workerd' default | 'node').",
+      "source_url": "https://docs.astro.build/en/guides/integrations-guide/cloudflare/"
+    },
+    {
+      "claim": "Cloudflare's Astro deploy guide now recommends Cloudflare Workers for new projects, with wrangler.jsonc assets config; Pages is legacy-but-supported.",
+      "detail": "The Cloudflare deploy guide says: 'Cloudflare recommends using Cloudflare Workers for new projects. For existing Pages projects, refer to Cloudflare's migration guide and compatibility matrix.' Static deploy config: wrangler.jsonc with { \"name\", \"compatibility_date\", \"assets\": { \"directory\": \"./dist\" } }. On-demand deploy adds \"main\": \"@astrojs/cloudflare/entrypoints/server\", compatibility_flags nodejs_compat + global_fetch_strictly_public, and assets.binding ASSETS. Commands: `npx astro build && npx wrangler preview/dev`, then `npx wrangler deploy`. CI/CD option 'Workers Builds' uses Build command `npx astro build` and Deploy command `npx wrangler deploy`.",
+      "source_url": "https://docs.astro.build/en/guides/deploy/cloudflare/"
+    },
+    {
+      "claim": "@astrojs/netlify is at major v8 (latest 8.2.5); also not required for a pure static site.",
+      "detail": "@astrojs/netlify docs header v8.2.5; npm latest 8.2.5 (2026-08-31), peerDependencies { astro: ^7.0.0 }. Docs: 'If you're using Astro as a static site builder, you only need this adapter if you are using additional Netlify services that require a server (e.g. Netlify Image CDN).' Netlify deploy guide: static site needs no extra config; build command `astro build` / `npm run build`, publish directory `dist`; optional netlify.toml with [build] command/publish.",
+      "source_url": "https://docs.astro.build/en/guides/integrations-guide/netlify/"
+    },
+    {
+      "claim": "Astro DB was deprecated in v6.4 and removed in Astro 7.0 — there is no first-party database option.",
+      "detail": "The @astrojs/db docs page is marked 'Removed': 'The Astro DB integration was deprecated in v6.4 and has been removed since Astro v7.0. If you were using this integration in your project, we recommend migrating to a third-party library for database functionality.' So a DB-backed Astro content site must use an external DB (e.g. Turso/libSQL, Cloudflare D1) accessed via a custom build-time loader or fetch, not astro:db.",
+      "source_url": "https://docs.astro.build/en/guides/astro-db/"
+    },
+    {
+      "claim": "Backend-free search on a static site: Pagefind (v1.5.2) is the standard — it indexes the built HTML and writes a static bundle; it has no server component.",
+      "detail": "Pagefind docs: 'Pagefind runs after your static generator, and outputs a static search bundle to your generated site... the index is generated for you from your generated site.' Run it after build: `npx -y pagefind --site dist` (the --site flag points at the static HTML output; for Astro that's dist/), which creates a /pagefind/ directory of browser deps + index files. 'Pagefind itself does not have any server component — the search integration is fully baked into your static site.' Multilingual search is automatic via the <html lang> attribute, with per-language independent indexes. Thai support: UI translations ✅, word stemming ❌ (results won't match across root words).",
+      "source_url": "https://pagefind.app/docs/"
+    },
+    {
+      "claim": "Fuse.js / client-side JSON index are the alternative, but those specific 'Add searching' recipes are no longer in the current official recipes list.",
+      "detail": "Older Astro docs (v4) listed recipes 'Add searching to your site with Pagefind' and 'Add searching to your site with Fuse.js'. The current docs.astro.build recipes index lists neither (official recipes include Add i18n features, Add an RSS feed, Add reading time, etc.). Approach remains valid manually: generate a JSON index at build and query it client-side, but limits are that the whole index ships to the browser and there is no stemming/ranking of Pagefind's quality. '@astrojs/sitemap' docs and the Cloudflare adapter docs elsewhere reference excluding '/pagefind/*' from SSR routing so the statically-generated Pagefind assets are served directly.",
+      "source_url": "https://docs.astro.build/en/recipes/"
+    },
+    {
+      "claim": "An Astro site can be built entirely inside a GitHub Actions cron job and deployed to Cloudflare via cloudflare/wrangler-action@v4; cloudflare/pages-action is deprecated.",
+      "detail": "wrangler-action README (main branch): defaults to Wrangler v4; usage `uses: cloudflare/wrangler-action@v4` with `apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}`. For Pages it uses an explicit command: `command: pages deploy YOUR_DIST_FOLDER --project-name=example`; for Workers the default `wrangler deploy` runs. Outputs include `deployment-url` and `pages-deployment-alias-url` (since Wrangler v3.78.0). The old cloudflare/pages-action is marked '🛑 DEPRECATED, please use wrangler-action' (final release v1.5.0). A third-party CVE write-up (CVE-2026-11325) states the pages-action repo is archived/removed with a 2026-09-18 sunset — treat that specific date as unverified from Cloudflare itself. A cron job can `actions/checkout`, run the content-generation script, `npm run build` (plus Pagefind), then the deploy step.",
+      "source_url": "https://github.com/cloudflare/wrangler-action"
+    },
+    {
+      "claim": "RSS and sitemap generation are first-party, simple, and static-friendly.",
+      "detail": "@astrojs/rss (latest 4.0.19) generates feeds from an API endpoint, e.g. src/pages/rss.xml.js exporting GET, using getCollection() to build items; works in static builds and on-demand. Requires `site` set in astro.config. @astrojs/sitemap (latest 3.7.4) 'crawls your statically-generated routes and creates the sitemap file, including dynamic routes like [...slug]... generated by getStaticPaths().' Caveat: 'This integration cannot generate sitemap entries for dynamic routes in SSR mode.'",
+      "source_url": "https://docs.astro.build/en/guides/rss/"
+    },
+    {
+      "claim": "i18n routing for Thai is just standard Astro i18n config — no Thai-specific handling.",
+      "detail": "Configure i18n: { locales: [...], defaultLocale: 'th' } in astro.config, create localized /[locale]/ folders under src/pages/, and use helpers from astro:i18n such as getRelativeLocaleUrl(). Options include prefixDefaultLocale (whether the default language gets a /[locale]/ prefix), per-language fallback languages, and browser language detection. Astro implements routing via middleware placed last in the chain. For Thai content, the practical considerations are URL transliteration (Astro generates ids/slugs from filenames — use ASCII slugs) and HTML `lang=\"th\"` for search/SEO.",
+      "source_url": "https://docs.astro.build/en/guides/internationalization/"
+    }
+  ],
+  "versions": {
+    "astro_latest": "7.3.2",
+    "astro_latest_published": "2026-09-08",
+    "astro_current_major": 7,
+    "astro_7_0_0_published": "2026-06-22",
+    "astro_6_0_0_published": "2026-03-10",
+    "astro_5_0_0_published": "2024-12-03",
+    "astro_node_engine": ">=22.12.0",
+    "astro_npm_engine": ">=9.6.5",
+    "@astrojs/cloudflare": "14.3.1",
+    "@astrojs/cloudflare_peer": "astro ^7.2.0, wrangler ^4.125.0",
+    "@astrojs/netlify": "8.2.5",
+    "@astrojs/netlify_peer": "astro ^7.0.0",
+    "@astrojs/node": "11.1.5",
+    "@astrojs/mdx": "8.0.1",
+    "@astrojs/rss": "4.0.19",
+    "@astrojs/sitemap": "3.7.4",
+    "pagefind": "1.5.2",
+    "wrangler": "4.131.1",
+    "wrangler_action": "v4",
+    "cloudflare_pages_action": "DEPRECATED (last v1.5.0)",
+    "@astrojs/db": "REMOVED in Astro 7.0 (deprecated v6.4)"
+  },
+  "recommendation": "Static-first is the correct choice for a daily programmatic article site. Do NOT use live content collections or an SSR database for this. The daily job should write one committed Markdown file per article into src/content/blog/ and then trigger a rebuild; the build regenerates the content-layer data store from those files, so the files are the durable source of truth and the site stays fully static (no adapter, no DB, no per-request cost). Rationale straight from the docs: live collections require an on-demand adapter, fetch on every request, have no data store persistence, and cannot do MDX or image optimization — none of which a daily-batch article site needs; and build-time collections are explicitly recommended 'whenever possible' and are 'suitable for tens of thousands of content entries'. Hosting: because everything is static, you need no Astro adapter; deploy either to Cloudflare Workers static assets or Cloudflare Pages with cloudflare/wrangler-action@v4 (Pages-action is dead). Pipeline: GitHub Actions on a daily cron -> run the generator script (fetch sources -> LLM summarize -> write .md) -> `npm run build` -> `npx pagefind --site dist` -> `wrangler-action@v4` deploy. Add @astrojs/rss (src/pages/rss.xml.js) and @astrojs/sitemap. Search via Pagefind on the static build. If the archive grows large enough that single-page builds or the .astro/data-store.json size become a problem, enable the experimental incrementalBuild (restore cacheDir=node_modules/.astro in CI) and collectionStorage: 'chunked'. Only add @astrojs/cloudflare and switch to on-demand rendering if you later need server islands, sessions, or truly dynamic filtering — not for the base case.",
+  "architecture_skeleton": "Static-first Astro site, content committed as Markdown:\n\nmy-astro-site/\n├─ astro.config.mjs            # defineConfig({ site, output: 'static' (default), i18n?, integrations:[sitemap()], experimental:{} })\n├─ package.json                # scripts: build = \"astro build && pagefind --site dist\"; add deps astro, @astrojs/rss, @astrojs/sitemap, pagefind\n├─ public/                     # static assets: _headers, _redirects, favicon, robots.txt\n├─ src/\n│  ├─ content.config.ts        # defineCollection({ loader: glob({ base:'./src/content/blog', pattern:'**/*.{md,mdx}' }), schema: z.object({ title, description, pubDate, updatedDate?, tags, sources, lang }) })\n│  ├─ content/\n│  │  └─ blog/\n│  │     ├─ 2026-09-13-some-slug.md      <-- WRITTEN DAILY BY THE JOB\n│  │     ├─ 2026-09-13-other-slug.md     <-- WRITTEN DAILY BY THE JOB\n│  │     └─ _drafts/…                     <-- underscore-prefixed files are excluded from build\n│  ├─ pages/\n│  │  ├─ index.astro                      # paginated list, getCollection('blog')\n│  │  ├─ blog/[id].astro                  # getStaticPaths() from getCollection; render(entry); cacheKey: entry.digest for incrementalBuild\n│  │  ├─ tags/[tag].astro                 # getStaticPaths() over tags\n│  │  ├─ rss.xml.js                       # @astrojs/rss GET using getCollection('blog')\n│  │  └─ search.astro                     # Pagefind UI (loads /pagefind/pagefind-ui.js)\n│  ├─ layouts/Base.astro                  # <html lang=\"th\"> (or per-locale)\n│  └─ components/\n├─ .github/workflows/daily.yml # schedule: cron -> checkout, setup-node@22, npm ci, run scripts/generate.mjs, npm run build, wrangler-action@v4 deploy\n├─ scripts/\n│  └─ generate.mjs             # THE DAILY JOB: fetch sources -> LLM summarize -> write src/content/blog/<date>-<slug>.md with YAML frontmatter\n├─ wrangler.jsonc              # { name, compatibility_date, assets: { directory: './dist' } }  (static-only; no \"main\")\n└─ .gitignore                  # dist/, node_modules/, .astro/, node_modules/.astro/\n\nFiles the daily job writes (and nothing else):\n1. src/content/blog/<YYYY-MM-DD>-<ascii-slug>.md — one file per article, with frontmatter matching the collection schema (title, description, pubDate, tags, sources[], lang). Filename becomes the entry id / URL slug, so use lowercase ASCII with dashes.\n2. Optionally a machine-readable sidecar (e.g. src/content/blog/<...>.sources.json or embedded frontmatter) recording fetched source URLs for citations/RSS.\n3. Optionally regenerated src/content/blog/_index.json or a src/data/ file if you want a custom client index for Fuse.js — but prefer Pagefind so no index needs committing.\n\nThe job does NOT write: any .astro files, astro.config.mjs, or the data store (.astro/data-store.json is build output and is gitignored/regenerated). After writing files it just triggers the build+deploy workflow (or runs it inline in the same Action).",
+  "gotchas": [
+    "Build time grows with the archive: every static page is rendered each build unless you opt into the experimental incrementalBuild flag (astro@7.2.0), which skips pages whose getStaticPaths() cacheKey (e.g. entry.digest) and module dependency graph are unchanged. In CI, its cache lives in cacheDir (default node_modules/.astro/) and MUST be restored before `astro build` or every page re-renders. It is disabled when build.concurrency > 1.",
+    "Content-layer data store size: by default everything lives in one file, .astro/data-store.json. For very large archives this can hit per-asset size limits on the host; the experimental collectionStorage: 'chunked' flag (astro@7.1.0) splits it into .astro/data-store/ chunks (20 MB default, configurable) and is explicitly 'recommended when deploying to platforms that have a size limit for individual assets.' The glob() loader also renders all Markdown eagerly during sync and stores the HTML in the data store — use the glob loader's deferRender: true to bound memory on huge collections (at the cost of losing the render cache).",
+    "Astro 7's Rust compiler is stricter: unclosed tags now produce build errors and semantically invalid HTML is no longer auto-corrected. LLM-generated Markdown that emits raw HTML can break the build — validate/sanitize generated content or keep it to plain Markdown.",
+    "i18n for Thai: there is no Thai-specific handling — configure locales/defaultLocale and use ASCII transliterated slugs for filenames/URLs (entry ids come from filenames), set <html lang=\"th\"> for search engines and Pagefind. Thai has no word spaces, which affects client-side search tokenization.",
+    "Pagefind Thai: the UI is translated (✅) but word stemming is unsupported (❌), so Thai queries won't match across root words. Pagefind must run AFTER `astro build` against dist/ as part of the build/deploy pipeline, otherwise there is no index.",
+    "RSS/sitemap: @astrojs/sitemap cannot generate entries for dynamic routes in SSR mode — fine for a static site, but it means keeping output: 'static'. @astrojs/rss requires `site` to be set in astro.config for correct links; if you add i18n, generate per-locale feeds and set the feed's <language>.",
+    "Cloudflare Pages vs Workers: Cloudflare now recommends Workers for new projects (Pages is legacy with a migration guide). For Pages deployment via CI, cloudflare/pages-action is deprecated and must be replaced with cloudflare/wrangler-action@v4 using `command: pages deploy dist --project-name=...`; the YAML syntax differs from pages-action.",
+    "Choosing SSR/DB for a daily job adds cost and failure modes for no benefit: live collections fetch on every request, persist nothing, and require an on-demand adapter; astro:db no longer exists (removed in Astro 7). Per-request rendering would also make each page dependent on the DB being up.",
+    "Node version: Astro 7.3.2 requires Node >= 22.12.0 — pin setup-node to 22.x (or newer) in the GitHub Action to avoid install/build failures.",
+    "CI must not commit build output: dist/, node_modules/ and the derived .astro/ data store should be gitignored; only the generated Markdown is committed. If the job is in a separate repo/process, it must push to the same repo that the deploy workflow watches."
+  ],
+  "unverified": [
+    "Cloudflare Pages / Workers free-tier quotas (requests/day, build minutes, asset count/size limits) — not sourced from Astro docs in this research; verify on Cloudflare's pricing/limits pages before relying on them.",
+    "The cloudflare/pages-action repository removal date of 2026-09-18 comes from a third-party CVE write-up (CVE-2026-11325) and blog, not from Cloudflare's own README. The deprecation itself (README '🛑 DEPRECATED, please use wrangler-action') is confirmed on GitHub.",
+    "Exact current-version majors of every @astrojs integration beyond those checked on npm (astro 7.3.2, @astrojs/cloudflare 14.3.1, @astrojs/netlify 8.2.5, @astrojs/node 11.1.5, @astrojs/mdx 8.0.1, @astrojs/rss 4.0.19, @astrojs/sitemap 3.7.4, pagefind 1.5.2, wrangler 4.131.1) are from the npm registry as of 2026-09-13; re-check `npm view` before pinning.",
+    "Whether Fuse.js remains a recommended Astro approach: the official 'Add searching with Fuse.js/Pagefind' recipes existed in v4 docs but are absent from the current recipes index — I could not confirm they were formally deprecated vs. just dropped from the sidebar.",
+    "The exact filesystem location of the content data store is documented inconsistently in places: the collection-storage page says .astro/data-store.json (project root .astro/), while the incremental-build page and config reference describe cacheDir as node_modules/.astro/. I report both as documented; verify in a real project.",
+    "Astro's own docs do not publish an explicit free-tier hosting recommendation or a cron-job-specific guide; the GitHub Actions cron + wrangler-action pipeline is assembled from the wrangler-action README and Cloudflare's Astro deploy guide, not from a single 'do this' Astro doc."
+  ]
+}
+```

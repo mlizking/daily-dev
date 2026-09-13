@@ -1,0 +1,620 @@
+```json
+{
+  "findings": [
+    {
+      "name": "Hacker News Firebase API (topstories/newstories/beststories)",
+      "endpoint": "https://hacker-news.firebaseio.com/v0/topstories.json | /v0/newstories.json | /v0/beststories.json | /v0/item/{id}.json | /v0/maxitem.json",
+      "category": "e) community",
+      "auth": "None",
+      "http_status": "200 (verified: topstories 4501B, newstories 4501B, item/1.json 164B, maxitem returns int)",
+      "rate_limit": "No documented limit; Firebase-backed, generous",
+      "notes": "Returns arrays of numeric item IDs; /item/{id}.json gives id, time (unix), title, url, score, descendants, kids. /maxitem + polling newstories gives clean 'new since yesterday' dedupe. No HTML needed.",
+      "reliability": "High / stable (no auth, no bot wall)"
+    },
+    {
+      "name": "Hacker News Algolia Search API",
+      "endpoint": "https://hn.algolia.com/api/v1/search_by_date?tags=front_page&hitsPerPage=50 | /api/v1/search?query=...",
+      "category": "e) community",
+      "auth": "None",
+      "http_status": "200 (verified, application/json; search_by_date, front_page, comment tags all return hits)",
+      "rate_limit": "Unofficial soft cap (~10k req/hr); be polite",
+      "notes": "Each hit has objectID, created_at, created_at_i (unix), points, num_comments, title, url, story_id. numericFilters=created_at_i>UNIX gives exactly 'new since yesterday'. Best dedupe-ready HN source. Full-text search supported.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Hacker News front-page RSS",
+      "endpoint": "https://news.ycombinator.com/rss",
+      "category": "e) community",
+      "auth": "None",
+      "http_status": "200 (11332B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "RSS of current front page (guid/pubDate). Simpler than Algolia but no filtering by time/score; use only as fallback.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Reddit JSON API (per-subreddit)",
+      "endpoint": "https://www.reddit.com/r/{programming|webdev|devops|LocalLLaMA|netsec|ExperiencedDevs}/new.json",
+      "category": "e) community",
+      "auth": "None works but IP bot-walled; reliable use requires OAuth (free app registration)",
+      "http_status": "403 (verified, text/html bot-wall — all UAs incl. custom UA and curl/8.0 blocked)",
+      "rate_limit": "OAuth free tier: 100 queries/min per OAuth client",
+      "notes": "Fragile from datacenter IPs. Official path is OAuth (oauth.reddit.com), which returned 403 without a token. Reddit's Responsible Builder Policy closed self-service app registration (manual approval); commercial use $0.24 per 1k calls. Use the .rss feed or plan for OAuth approval.",
+      "reliability": "Fragile (bot wall) / paid for reliable scale"
+    },
+    {
+      "name": "Reddit Atom RSS (per-subreddit)",
+      "endpoint": "https://www.reddit.com/r/{programming|devops|netsec|LocalLLaMA|webdev|ExperiencedDevs}/.rss",
+      "category": "e) community",
+      "auth": "None",
+      "http_status": "200 (verified 27688B, application/atom+xml; 25 entries, id=t3_xxxxx, published+updated ISO timestamps)",
+      "rate_limit": "Undocumented but AGGRESSIVE per-IP: 429 after ~2 rapid requests; needs ~10s spacing (confirmed)",
+      "notes": "Only free no-auth Reddit option that currently returns data. Atom entries carry t3_<id> and published/updated for dedupe. Throttle hard (>=10s per sub, stagger across subs), or prefer OAuth.",
+      "reliability": "Fragile (rate-limit sensitive)"
+    },
+    {
+      "name": "GitHub Security Advisories (GHSA) API",
+      "endpoint": "https://api.github.com/advisories?per_page=100&sort=published&direction=desc",
+      "category": "b) security",
+      "auth": "None (optional PAT/App token raises limit)",
+      "http_status": "200 (verified 16662B, application/json)",
+      "rate_limit": "60 req/hr unauthenticated; 5000 req/hr with token",
+      "notes": "Fields: ghsa_id, cve_id, published_at, updated_at, severity, summary, vulnerabilities[]. Filter by published/updated since for new-since-yesterday. Same host backs GHSA Database. Gold standard for ecosystem advisories.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "GitHub Advisory Database (repo contents / raw git)",
+      "endpoint": "https://api.github.com/repos/github/advisory-database/contents/advisories/github-reviewed | https://raw.githubusercontent.com/github/advisory-database/main/...",
+      "category": "b) security",
+      "auth": "None",
+      "http_status": "200 (verified 9033B directory listing)",
+      "rate_limit": "GitHub 60/hr unauth, 5000/hr auth; git clone avoids API limits",
+      "notes": "OSV-format JSON (id, modified, published, affected) per advisory. git clone once + git pull is the efficient bulk path.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "OSV.dev API (query / querybatch / vulns)",
+      "endpoint": "POST https://api.osv.dev/v1/query | POST /v1/querybatch | GET /v1/vulns/{id}",
+      "category": "b) security",
+      "auth": "None",
+      "http_status": "200 (verified: query lodash 23841B, querybatch 445B, /v1/vulns/GHSA-... 4846B)",
+      "rate_limit": "None documented; be reasonable",
+      "notes": "Aggregates GHSA/CVE/ecosystem advisories. Returns id + modified (ISO) for dedupe, summary, affected ranges. querybatch for many packages at once. No 'list recent' endpoint — poll per-package or use ecosystem zips.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "OSV ecosystem bulk export (zips)",
+      "endpoint": "https://osv-vulnerabilities.storage.googleapis.com/{npm|PyPI|Go|Maven|...}/all.zip",
+      "category": "b) security",
+      "auth": "None",
+      "http_status": "200 (npm/all.zip 46.8MB verified). NOTE: /GHSA/all.zip = 404",
+      "rate_limit": "None documented",
+      "notes": "Complete per-ecosystem OSV records; heavy download but comprehensive and dedupe-friendly (each record has id+modified). Not available for 'GHSA' key.",
+      "reliability": "High / stable (heavy transfer)"
+    },
+    {
+      "name": "NVD CVE API 2.0",
+      "endpoint": "https://services.nvd.nist.gov/rest/json/cves/2.0?pubStartDate=...&pubEndDate=...&resultsPerPage=100",
+      "category": "b) security",
+      "auth": "None, or free API key (email request) for higher limit",
+      "http_status": "200 (verified: default 4151B; date-filtered 3322B; totalResults 390689)",
+      "rate_limit": "5 requests / rolling 30s WITHOUT key; 50 requests / rolling 30s WITH free key",
+      "notes": "Authoritative CVE metadata (id, published, lastModified, CVSS, references). Use pubStartDate+pubEndDate windows for new-since-yesterday. Slow/paginated — sleep between calls as NIST recommends.",
+      "reliability": "High but slow; rate-limited without key"
+    },
+    {
+      "name": "CISA Known Exploited Vulnerabilities (KEV) catalog",
+      "endpoint": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+      "category": "b) security",
+      "auth": "None",
+      "http_status": "200 (verified 1721121B, application/json; catalogVersion 2026.09.11, count 1709)",
+      "rate_limit": "None documented",
+      "notes": "Single JSON with catalogVersion, dateReleased, vulnerabilities[] (cveID, dateAdded, vendorProject, shortDescription). Updated ~daily; dateAdded enables dedupe. Highest-signal vuln source (actively exploited only).",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "CVE.org / CVE Services API (cvelistV5)",
+      "endpoint": "https://cveawg.mitre.org/api/cve/{CVE-ID}",
+      "category": "b) security",
+      "auth": "None (auth only for CNA publishing)",
+      "http_status": "200 (verified 10069B, application/json, CVE_RECORD v5.2)",
+      "rate_limit": "None documented",
+      "notes": "Authoritative CVE record per ID (cveMetadata state/datePublished, containers). No bulk 'recent' query — pair with NVD for listing; bulk via cvelistV5 git repo.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "dev.to (Forem) API",
+      "endpoint": "https://dev.to/api/articles?per_page=100&tag=ai | /api/articles/latest?per_page=100 | /api/articles?top=1",
+      "category": "e) community / c) AI tooling",
+      "auth": "None for reads (API key only for posting)",
+      "http_status": "200 (verified 4059-6287B, application/json)",
+      "rate_limit": "Undocumented; be polite",
+      "notes": "Fields: id, published_at, title, url, tag_list, positive_reactions_count, comments_count, description. ?tag=ai and ?top=1 filter by topic/period; published_at gives dedupe. Note: 'latest' feed can contain spam — prefer tag+top.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Anthropic News / Changelog",
+      "endpoint": "https://www.anthropic.com/news (HTML only)",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 HTML (465118B). /news/rss.xml and /rss.xml = 404 (verified)",
+      "rate_limit": "None",
+      "notes": "NO official RSS. Must HTML-scrape (Next.js data/hydration payload) or use a third-party proxy/generator. Fragile for automation.",
+      "reliability": "Fragile (no feed; scrape required)"
+    },
+    {
+      "name": "OpenAI News RSS",
+      "endpoint": "https://openai.com/news/rss.xml (openai.com/blog/rss.xml 307-redirects here)",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (724821B, text/xml; verified via redirect). Note: openai.com/news/ page itself = 403 to bots",
+      "rate_limit": "None documented",
+      "notes": "Valid RSS 2.0 with items (title, link, guid, pubDate). Use the RSS, not the HTML page (bot-walled).",
+      "reliability": "High via RSS; page scraping blocked"
+    },
+    {
+      "name": "Google DeepMind News RSS",
+      "endpoint": "https://deepmind.google/blog/rss.xml",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (71993B, text/xml, RSS 2.0)",
+      "rate_limit": "None documented",
+      "notes": "RSS with pubDate/guid. Page path /discover/blog/ 301s; use the rss.xml directly.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Google AI (blog.google) RSS",
+      "endpoint": "https://blog.google/technology/ai/rss/ (301 -> /innovation-and-ai/technology/ai/rss/)",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (32009B, application/xml, after redirect)",
+      "rate_limit": "None documented",
+      "notes": "Google's AI product news RSS; publish dates in items.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Google Developers Blog RSS",
+      "endpoint": "https://developers.googleblog.com/feeds/posts/default",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (18562B, application/rss+xml, after redirect to trailing slash)",
+      "rate_limit": "None documented",
+      "notes": "Blogger-backed RSS for Google dev platform news.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Google Online Security Blog RSS",
+      "endpoint": "https://security.googleblog.com/feeds/posts/default?alt=rss (redirects to feeds.feedburner.com/GoogleOnlineSecurityBlog)",
+      "category": "b) security",
+      "auth": "None",
+      "http_status": "200 (514319B, text/xml, Atom, after redirect)",
+      "rate_limit": "None documented",
+      "notes": "Google's security advisories/research. Must add ?alt=rss (bare /feeds/posts/default 302s).",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Google Project Zero feed",
+      "endpoint": "https://projectzero.google/feed.xml",
+      "category": "b) security",
+      "auth": "None",
+      "http_status": "200 (13245259B = ~13MB Atom)",
+      "rate_limit": "None documented",
+      "notes": "Very large (full post bodies). Use conditional GET (ETag/If-Modified-Since) to avoid re-downloading 13MB daily.",
+      "reliability": "High but heavy"
+    },
+    {
+      "name": "Meta AI Blog",
+      "endpoint": "https://ai.meta.com/blog/rss/",
+      "category": "d) vendor eng",
+      "auth": "None (but blocked/geofenced)",
+      "http_status": "400 (verified — Facebook edge returns Error page)",
+      "rate_limit": "n/a",
+      "notes": "No working RSS reachable; ai.meta.com returns 400. Fragile.",
+      "reliability": "Fragile (blocked/geofenced)"
+    },
+    {
+      "name": "Meta Engineering Blog RSS",
+      "endpoint": "https://engineering.fb.com/feed/",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (275450B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "Meta engineering (infra/scale) posts with pubDate.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "InfoQ",
+      "endpoint": "https://feed.infoq.com/ (all) | https://feed.infoq.com/news/ (news only)",
+      "category": "a) dev/AI news",
+      "auth": "None",
+      "http_status": "200 (both, application/xml, RSS 2.0)",
+      "rate_limit": "None documented",
+      "notes": "Enterprise/dev industry news RSS with guid+pubDate. News-only feed reduces noise.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "The Register",
+      "endpoint": "https://www.theregister.com/headlines.atom (302 -> api.theregister.com/api/v1/article?orderBy=published&site_id=2&remapper=rss)",
+      "category": "a) dev/AI news",
+      "auth": "None",
+      "http_status": "200 (242053B, application/xml, after 302)",
+      "rate_limit": "None documented",
+      "notes": "Tech/security/enterprise news Atom. Follow redirects. pubDate+guid per item.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Lobsters",
+      "endpoint": "https://lobste.rs/rss",
+      "category": "e) community",
+      "auth": "None",
+      "http_status": "200 (17948B, application/rss+xml, RSS 2.0)",
+      "rate_limit": "None documented",
+      "notes": "High-signal dev link aggregator (25 items, pubDate, comments URL). Low-volume, tech-only — good counterpart to HN.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Stack Overflow Blog RSS",
+      "endpoint": "https://stackoverflow.blog/feed/",
+      "category": "a) dev industry",
+      "auth": "None",
+      "http_status": "200 (42609B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "Deprecation/dev-trends/industry posts. Posting cadence lower than news feeds.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Changelog",
+      "endpoint": "https://changelog.com/feed",
+      "category": "a) dev news / c) AI tooling",
+      "auth": "None",
+      "http_status": "200 (355776B, application/xml)",
+      "rate_limit": "None documented",
+      "notes": "Developer news + podcasts RSS. Large payload; use conditional GET.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "arXiv RSS (category updates)",
+      "endpoint": "https://export.arxiv.org/rss/cs.AI | /rss/cs.SE | /rss/cs.LG",
+      "category": "c) AI tooling",
+      "auth": "None",
+      "http_status": "200 (application/rss+xml; channel 'cs.AI updates on arXiv.org')",
+      "rate_limit": "RSS endpoint no documented hard limit; be polite",
+      "notes": "Daily new-submission digests per category. Announcement cadence (weekdays). Use RSS instead of the API which rate-limits hard.",
+      "reliability": "High for RSS"
+    },
+    {
+      "name": "arXiv API (query)",
+      "endpoint": "https://export.arxiv.org/api/query?search_query=cat:cs.AI&max_results=100",
+      "category": "c) AI tooling",
+      "auth": "None",
+      "http_status": "429 (verified 'Rate exceeded.' from shared IP; endpoint exists and is Atom)",
+      "rate_limit": "Officially ~1 request / 3 seconds; frequently 429s on shared/datacenter IPs",
+      "notes": "Powerful (search, sortBy=submittedDate) but unreliable from cloud IPs. Prefer the per-category RSS feed for a daily digest.",
+      "reliability": "Fragile (429 under load)"
+    },
+    {
+      "name": "GitHub Trending",
+      "endpoint": "https://github.com/trending (HTML only)",
+      "category": "c) AI tooling / a)",
+      "auth": "None",
+      "http_status": "200 (636275B, text/html)",
+      "rate_limit": "n/a",
+      "notes": "NO official API or RSS. Requires HTML scraping (no stable IDs/timestamps). Substitute with the GitHub Search API below, which is machine-readable.",
+      "reliability": "Fragile (HTML scrape, no IDs)"
+    },
+    {
+      "name": "GitHub Repo Search API (trending substitute)",
+      "endpoint": "https://api.github.com/search/repositories?q=created:>YYYY-MM-DD&sort=stars&order=desc&per_page=100",
+      "category": "c) AI tooling",
+      "auth": "None (token raises limit)",
+      "http_status": "200 (verified 12544B; total_count 3952746)",
+      "rate_limit": "Search API: 10 req/min unauthenticated, 30 req/min authenticated",
+      "notes": "Machine-readable 'trending new repos' with id, full_name, created_at, stargazers_count, description — no scraping, dedupe-ready.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "npm registry search + downloads",
+      "endpoint": "https://registry.npmjs.org/-/v1/search?text=...&size=250 | https://api.npmjs.org/downloads/point/last-week/{pkg}",
+      "category": "c) AI tooling",
+      "auth": "None",
+      "http_status": "200 (search 1932B; downloads 81B)",
+      "rate_limit": "None documented (be polite); downloads API CORS-enabled",
+      "notes": "Package metadata + weekly download counts for trend signals. No auth, stable.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "TLDR (tech/AI) newsletter RSS",
+      "endpoint": "https://tldr.tech/api/rss/tech | https://tldr.tech/api/rss/ai",
+      "category": "a) dev/AI news / c)",
+      "auth": "None",
+      "http_status": "200 (both, text/xml, RSS 2.0)",
+      "rate_limit": "None documented",
+      "notes": "Daily-curated dev & AI newsletter items with links+pubDate. Excellent signal-to-noise for a daily digest.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Latent Space RSS",
+      "endpoint": "https://www.latent.space/feed",
+      "category": "c) AI tooling",
+      "auth": "None",
+      "http_status": "200 (858775B, application/xml)",
+      "rate_limit": "None documented",
+      "notes": "AI-engineer newsletter/podcast; interviews + technique writeups. pubDate per item.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Simon Willison's Weblog (Atom)",
+      "endpoint": "https://simonwillison.net/atom/everything/",
+      "category": "c) AI tooling",
+      "auth": "None",
+      "http_status": "200 (87784B, application/xml, Atom)",
+      "rate_limit": "None documented",
+      "notes": "Top practitioner 'AI for developers' blog (LLM techniques, tooling). Atom with updated timestamps + stable entry ids.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Sebastian Raschka (Ahead of AI) RSS",
+      "endpoint": "https://magazine.sebastianraschka.com/feed",
+      "category": "c) AI tooling",
+      "auth": "None",
+      "http_status": "200 (2867150B, application/xml)",
+      "rate_limit": "None documented",
+      "notes": "Deep AI/ML technique deep-dives (Substack). Free-tier posts in RSS; some content paywalled.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Pragmatic Engineer RSS",
+      "endpoint": "https://newsletter.pragmaticengineer.com/feed",
+      "category": "a) dev industry",
+      "auth": "None",
+      "http_status": "200 (576590B, application/xml)",
+      "rate_limit": "None documented",
+      "notes": "Best dev-industry/hiring/trends newsletter (Substack). Free posts in RSS; paid posts truncated.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "news.smol.ai (AINews) RSS",
+      "endpoint": "https://news.smol.ai/rss.xml (old: https://buttondown.com/ainews/rss)",
+      "category": "c) AI tooling",
+      "auth": "None",
+      "http_status": "200 (2253193B, application/xml; old buttondown feed still 200 but marked MOVED)",
+      "rate_limit": "None documented",
+      "notes": "Weekday recaps of AI news for engineers (aggregated, high density). Use the new smol.ai feed.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Ben's Bites",
+      "endpoint": "https://bensbites.beehiiv.com/ (no public RSS found)",
+      "category": "c) AI tooling",
+      "auth": "None",
+      "http_status": "beehiiv /feed = 404 (verified), bensbites.co/feed = 404, /rss.xml 301 loop",
+      "rate_limit": "n/a",
+      "notes": "No working public RSS on the beehiiv host. Requires HTML scrape or headless browser. Fragile.",
+      "reliability": "Fragile (no RSS)"
+    },
+    {
+      "name": "The Batch (deeplearning.ai)",
+      "endpoint": "https://www.deeplearning.ai/the-batch/ (no working feed found)",
+      "category": "a) dev/AI news / c)",
+      "auth": "None",
+      "http_status": "/the-batch/feed/ 404, /the-batch/feed 404, /blog/feed/ 308 loop (all verified)",
+      "rate_limit": "n/a",
+      "notes": "No reachable RSS. HTML scrape/headless required. Fragile.",
+      "reliability": "Fragile (no RSS)"
+    },
+    {
+      "name": "GDELT DOC 2.0 API",
+      "endpoint": "https://api.gdeltproject.org/api/v2/doc/doc?query=...&mode=artlist&format=json",
+      "category": "a) dev/AI news",
+      "auth": "None",
+      "http_status": "429 (verified: 'Please limit requests to one every 5 seconds')",
+      "rate_limit": "1 request / 5 seconds (enforced)",
+      "notes": "Global news article list (title, url, seendate, domain) — broad trend coverage. Strict 5s throttle; use ngrams dataset for high volume.",
+      "reliability": "Medium (hard 5s rate limit)"
+    },
+    {
+      "name": "TechCrunch AI RSS",
+      "endpoint": "https://techcrunch.com/category/artificial-intelligence/feed/",
+      "category": "a) dev/AI news",
+      "auth": "None",
+      "http_status": "200 (16811B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "AI industry/product news RSS with pubDate.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Ars Technica RSS",
+      "endpoint": "https://feeds.arstechnica.com/arstechnica/index",
+      "category": "a) dev news / b) security",
+      "auth": "None",
+      "http_status": "200 (76701B, text/xml)",
+      "rate_limit": "None documented",
+      "notes": "Broad tech/science news incl. security; pubDate per item.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "BleepingComputer RSS",
+      "endpoint": "https://www.bleepingcomputer.com/feed/",
+      "category": "b) security",
+      "auth": "None",
+      "http_status": "200 (13225B, text/xml)",
+      "rate_limit": "None documented",
+      "notes": "Security/breach news RSS; good vuln-in-the-wild coverage.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Krebs on Security RSS",
+      "endpoint": "https://krebsonsecurity.com/feed/",
+      "category": "b) security",
+      "auth": "None",
+      "http_status": "200 (157034B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "Investigative security reporting; low frequency but high signal.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Microsoft Security Blog RSS",
+      "endpoint": "https://www.microsoft.com/en-us/security/blog/feed/",
+      "category": "b) security / d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (399721B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "Vendor security research/advisories (Threat Intelligence). pubDate per item.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "AWS Security Blog RSS",
+      "endpoint": "https://aws.amazon.com/blogs/security/feed/",
+      "category": "b) security / d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (616765B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "AWS security bulletins/guides. Large payload.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "AWS News Blog RSS",
+      "endpoint": "https://aws.amazon.com/blogs/aws/feed/",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (260212B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "AWS product launch/announcement RSS.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Cloudflare Blog RSS",
+      "endpoint": "https://blog.cloudflare.com/rss/",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (322999B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "Cloudflare engineering/internet-infra posts; strong eng depth.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "GitHub Blog + Changelog + Security feeds",
+      "endpoint": "https://github.blog/feed/ | https://github.blog/changelog/feed/ | https://github.blog/security/feed/",
+      "category": "d) vendor eng / c)",
+      "auth": "None",
+      "http_status": "200 (blog 646699B, changelog 42475B, security 178054B — /category/security/feed/ 301s to /security/feed/)",
+      "rate_limit": "None documented",
+      "notes": "Company engineering + product changelog (useful for dev-tooling updates).",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Netflix Technology Blog RSS",
+      "endpoint": "https://netflixtechblog.com/feed",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (240491B, text/xml)",
+      "rate_limit": "None documented",
+      "notes": "Netflix engineering (Medium-hosted) RSS; infra/scale content.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Stripe Blog RSS",
+      "endpoint": "https://stripe.com/blog/feed.rss",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (9035B, application/rss+xml)",
+      "rate_limit": "None documented",
+      "notes": "Stripe engineering/product posts; smaller feed.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Vercel News Atom",
+      "endpoint": "https://vercel.com/blog/rss.xml (308 -> https://vercel.com/atom)",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (3555761B, application/atom+xml, after redirect)",
+      "rate_limit": "None documented",
+      "notes": "Large Atom (3.5MB); follow redirect. Front-end/platform eng content.",
+      "reliability": "High but heavy"
+    },
+    {
+      "name": "Google Cloud Blog RSS",
+      "endpoint": "https://cloudblog.withgoogle.com/rss/",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "200 (573314B, application/xml)",
+      "rate_limit": "None documented",
+      "notes": "GCP product/engineering news RSS.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "Uber Engineering Blog feed",
+      "endpoint": "https://www.uber.com/blog/engineering/feed/",
+      "category": "d) vendor eng",
+      "auth": "None",
+      "http_status": "406 'Not Acceptable' (verified; also 404 with RSS Accept header)",
+      "rate_limit": "n/a",
+      "notes": "No reachable feed from this client; likely UA/edge blocked. Fragile — needs headless browser or skip.",
+      "reliability": "Fragile"
+    },
+    {
+      "name": "VentureBeat AI RSS",
+      "endpoint": "https://venturebeat.com/category/ai/feed/",
+      "category": "a) dev/AI news",
+      "auth": "None",
+      "http_status": "429 (verified, text/html; Cloudflare/Astro edge)",
+      "rate_limit": "Undocumented; bot/rate limited (Cloudflare)",
+      "notes": "Returns 429 to non-browser clients; requires retries/proxy/headless. Fragile.",
+      "reliability": "Fragile (429/bot wall)"
+    },
+    {
+      "name": "LWN.net RSS",
+      "endpoint": "https://lwn.net/headlines/rss",
+      "category": "a) dev news",
+      "auth": "None (some articles subscriber-only)",
+      "http_status": "200 (20320B, application/xml)",
+      "rate_limit": "None documented",
+      "notes": "Linux/kernel/open-source news RSS; headlines+pubDate. Paywalled article bodies for recent items.",
+      "reliability": "High / stable"
+    },
+    {
+      "name": "X / Twitter API v2",
+      "endpoint": "https://api.x.com/2/tweets/search/recent",
+      "category": "e) community",
+      "auth": "OAuth 2.0 app + PAID tier (Basic ~$200/mo historically; newer pay-per-use credits); no usable free read tier",
+      "http_status": "not testable without paid credentials",
+      "rate_limit": "Tier-dependent; read caps by tier",
+      "notes": "Not free — read access requires a paid plan. Do not include unless budgeted; use HN/Reddit/Lobsters for dev chatter instead.",
+      "reliability": "Paid only (not free)"
+    }
+  ],
+  "fragile_or_paid": [
+    "Reddit JSON API — 403 bot wall from datacenter IPs; reliable access needs OAuth (free tier 100 QPM but self-service app registration closed; commercial $0.24/1k calls).",
+    "Reddit Atom .rss — works without auth but hard per-IP rate limit (429 after ~2 rapid requests; needs ~10s spacing).",
+    "Anthropic News — no RSS (/news/rss.xml and /rss.xml both 404); HTML scrape/headless required.",
+    "Meta AI Blog (ai.meta.com) — returns HTTP 400 (blocked/geofenced); no working RSS.",
+    "Ben's Bites — no public RSS (beehiiv feed 404); scrape/headless required.",
+    "The Batch (deeplearning.ai) — all feed paths 404/308; no reachable RSS.",
+    "Uber Engineering feed — 406 Not Acceptable / 404; edge-blocked.",
+    "VentureBeat AI feed — 429 (Cloudflare bot/rate wall).",
+    "arXiv API query endpoint — 429 'Rate exceeded' from shared/cloud IPs; use category RSS instead.",
+    "GDELT DOC API — enforced 1 request / 5 seconds (429 otherwise).",
+    "GitHub Trending — HTML only, no API/RSS, no stable IDs/timestamps; use GitHub Search API instead.",
+    "X/Twitter API — paid only (no usable free read tier)."
+  ],
+  "recommended_shortlist": [
+    "Hacker News Algolia API (numericFilters=created_at_i>UNIX) — dedupe-ready, highest dev signal",
+    "Hacker News Firebase API (newstories + /item/{id}) — clean incremental IDs",
+    "GitHub Security Advisories (GHSA) API — phrased advisories with published_at/updated_at",
+    "OSV.dev API (querybatch) — cross-ecosystem vulns by package, id+modified",
+    "CISA KEV catalog JSON — only actively-exploited CVEs, dateAdded for dedupe",
+    "NVD CVE API 2.0 (register free key) — authoritative CVE metadata, date-windowed",
+    "dev.to API (tag=ai, top=1) — free, JSON, published_at dedupe",
+    "TLDR RSS (tldr.tech/api/rss/tech + /ai) — curated dev+AI, high signal-to-noise",
+    "arXiv RSS cs.AI/cs.SE/cs.LG — daily AI/SE research digests",
+    "Simon Willison's Weblog Atom — top AI-for-devs practitioner blog",
+    "OpenAI News RSS + Google DeepMind RSS — vendor AI announcements",
+    "Cloudflare / GitHub / Netflix engineering RSS — vendor eng depth"
+  ],
+  "unverified": [
+    "X/Twitter API v2 — endpoint not exercised (requires paid credentials); pricing/limits taken from secondary sources.",
+    "Reddit OAuth-authenticated endpoint (oauth.reddit.com) — 403 without a token; 100 QPM free-tier limit taken from secondary sources.",
+    "Anthropic HTML scrape feasibility — page returns 200 but item IDs/timestamps not verified without a scraper.",
+    "Meta AI blog alternate hosts — only ai.meta.com/blog/rss/ tested; no alternative feed confirmed."
+  ]
+}
+```

@@ -1,0 +1,147 @@
+```json
+{
+  "findings": [
+    {
+      "claim": "Cloudflare Workers Free plan: 100,000 requests/day, resetting at midnight UTC; exceeding returns Error 1027",
+      "detail": "Account plan limits table: Requests = 100,000/day on Workers Free. Daily request limit resets at midnight UTC; exceeding it returns Error 1027. There is no limit on requests per second. Static-asset requests are not counted against this (see static-assets finding).",
+      "source_url": "https://developers.cloudflare.com/workers/platform/limits/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare Workers Free CPU time is 10 ms per invocation; wall-clock/IO wait is EXCLUDED from CPU time",
+      "detail": "CPU time table: 'CPU time per HTTP request | 10 ms (Free)'. Cron Trigger CPU time on Free is also 10 ms (Paid: 30 s for <1h interval, 15 min for >=1h). Docs explicitly state: 'CPU time measures how long the CPU spends executing your Worker code. Waiting on network requests (such as fetch() calls, KV reads, or database queries) does not count toward CPU time.' So LLM API calls and feed fetches are free of CPU accounting; only JS/WASM execution counts. Exceeding it returns Error 1102. Note: 'Each isolate has some built-in flexibility to allow for cases where your Worker infrequently runs over the configured limit.' Isolate-level flexibility means occasional overages pass.",
+      "source_url": "https://developers.cloudflare.com/workers/platform/limits/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare Workers Free subrequest limit: 50 subrequests per invocation",
+      "detail": "'Subrequests per invocation: 50 (Free) / 10,000 (Paid)'. A subrequest is any fetch() call or call to KV/R2/D1. A pipeline that fetches 'many sources' must fit within 50 fetch calls per invocation.",
+      "source_url": "https://developers.cloudflare.com/workers/platform/limits/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare Cron Triggers ARE available on the Workers FREE plan, up to 5 per account, with 1-minute minimum granularity",
+      "detail": "'Number of Cron Triggers per account | 5 (Free) / 250 (Paid)'. Cron Triggers are a Workers feature (NOT available on Pages). Cron expressions use 5 fields (minute/hour/dom/month/dow), so the finest granularity is once per minute ('* * * * *'). Docs note Workers scheduled by Cron Triggers 'run on underutilized machines' and execute on UTC. A once-daily schedule is well within the 5-trigger limit.",
+      "source_url": "https://developers.cloudflare.com/workers/configuration/cron-triggers/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare D1 Free tier: 5 million rows read/day, 100,000 rows written/day, 5 GB total storage, 10 databases, 500 MB max per DB",
+      "detail": "D1 billing metrics: Rows read 5 million/day (Free); Rows written 100,000/day (Free); Storage 5 GB total (Free). D1 limits: 'Databases per account 50,000 (Paid) / 10 (Free)'; 'Maximum database size 10 GB (Paid) / 500 MB (Free)'; 'Maximum storage per account 1 TB (Paid) / 5 GB (Free)'. Free limits reset daily 00:00 UTC. D1 is scale-to-zero (no charge for idle). Easily sufficient for a once-daily pipeline (one article row + a few tracking rows/day). Exceeding daily limits makes D1 return errors — queries stop until reset.",
+      "source_url": "https://developers.cloudflare.com/d1/platform/pricing/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare Workers KV Free tier: 100,000 reads/day, 1,000 writes/day, 1,000 deletes/day, 1 GB storage, 25 MiB max value",
+      "detail": "KV pricing/limits: Keys read 100,000/day (Free); Keys written 1,000/day (Free); Keys deleted 1,000/day (Free); Stored data 1 GB (Free). Additional limits: key size 512 bytes, value size 25 MiB, writes to the same key limited to 1/second, 1,000 namespaces/account. 'All limits reset daily at 00:00 UTC. If you exceed any one of these limits, further operations of that type will fail with an error.' 1,000 writes/day is ample for caching one daily article but would be exceeded by high-frequency per-request caching.",
+      "source_url": "https://developers.cloudflare.com/kv/platform/pricing/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare R2 Free tier: 10 GB-month storage, 1 million Class A ops/month, 10 million Class B ops/month, and EGRESS IS FREE",
+      "detail": "R2 free tier: Storage 10 GB-month/month; Class A 1 million requests/month; Class B 10 million requests/month. 'Egress (data transfer to Internet) | Free' for all storage classes. Footnote confirms: 'Egressing directly from R2, including via the Workers API, S3 API, and r2.dev domains does not incur data transfer (egress) charges and is free.' DeleteObject/DeleteBucket/AbortMultipartUpload are free operations.",
+      "source_url": "https://developers.cloudflare.com/r2/pricing/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare Queues IS available on the Workers FREE plan: 10,000 operations/day, 24-hour retention (non-configurable)",
+      "detail": "Queues pricing table (Workers Free column): 'Standard operations 10,000 operations/day included'; 'Message retention 24 hours (non-configurable)'. An operation is counted per 64 KB written/read/deleted; delivery typically costs 3 operations (write+read+delete) per message. No egress/bandwidth charges. 10,000 ops/day = ~3,300 message deliveries/day. Message retention of 24h (not configurable to 4/14 days on Free) is a real constraint for delayed/retry semantics.",
+      "source_url": "https://developers.cloudflare.com/queues/platform/pricing/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare Pages is NOT deprecated but is in maintenance mode — Cloudflare explicitly directs NEW projects to Workers",
+      "detail": "The Pages docs landing page now carries: 'Are you sure you want to use Pages? Workers supports most Pages use cases and offers a broader feature set... It is Cloudflare's primary platform for building applications. Start new projects with Workers.' Pages is not switched off and existing projects keep running; there is no migration deadline. Cloudflare's own migration guide exists at the source_url. Critically, Cron Triggers, Queue consumers, Durable Objects, Email Workers, and rate limiting are Workers-only features that Pages never got.",
+      "source_url": "https://developers.cloudflare.com/pages/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare Pages Free plan: 500 builds/month, 1 concurrent build, 20,000 files, 25 MiB max file, 20-minute build timeout, 100 custom domains, 100 projects",
+      "detail": "Pages limits: 'Builds per month | Free 500 / Pro 5,000 / Business 20,000'; 'Builds | 1 build at a time' (Free). 'Builds will timeout after 20 minutes.' Files: 20,000/site (Free). Max single file: 25 MiB. Custom domains: 100 (Free). Projects: 100/account. A once-daily Git-triggered build = ~30 builds/month, far below 500. NOTE: Pages has no Cron Triggers — a Pages project alone cannot host the scheduled job.",
+      "source_url": "https://developers.cloudflare.com/pages/platform/limits/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Cloudflare static-asset serving is FREE and unlimited (both Workers Static Assets and Pages) — it does not consume the 100k/day Worker request quota",
+      "detail": "Static Assets docs: requests matching a static asset are 'served — without invoking Worker code' unless run_worker_first is set. The pricing page similarly states 'Requests to static assets are free and unlimited.' Workers Static Assets limits on Free: 20,000 files per Worker version, 25 MiB per individual file. This is the key reason a mostly-static article site costs nothing on Cloudflare.",
+      "source_url": "https://developers.cloudflare.com/workers/static-assets/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Netlify has REPLACED its old Free plan with 'Credit-based' pricing: 300 credits/month with a HARD LIMIT (no auto-recharge, no credit card)",
+      "detail": "Effective September 4, 2025, all new Netlify accounts use Credit-based plans. Free plan = '$0/month, forever, for 300 credits/month with a hard limit and no auto recharge option.' 'You'll never be charged for the Free plan.' Credits are team-wide and reset each billing cycle with no rollover. Per the docs, build minutes are no longer a metric: 'Build minutes are not calculated as their own metric in our Credit-based pricing plans.' Arbitrary-usage credits are NOT purchasable on Free.",
+      "source_url": "https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/credit-based-pricing-plans.md",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "CRITICAL Netlify Free-tier blocker: each PRODUCTION deploy costs 15 credits, so the Free plan caps you at ~20 production deploys/month — a DAILY publish (30/month = 450 credits) exceeds the 300-credit allowance",
+      "detail": "Credit rates: Production deploys = 15 credits each; Deploy Previews / branch deploys = 0 credits. Compute = 10 credits per GB-hour; Bandwidth = 20 credits per GB; Web requests = 2 credits per 10,000 requests. Therefore 300 credits / 15 = 20 production deploys/month maximum (before any compute/bandwidth/request usage). A once-daily automated publish requires ~30 production deploys/month = 450 credits, which exceeds the Free allowance by 50%. When credits are exhausted, 'when a web project uses up its monthly credit allotment, it enters a paused state until the start of the next billing cycle' and 'if one site/web project exceeds its limits, all sites/projects on your account will be paused.'",
+      "source_url": "https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/how-credits-work/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Netlify SCHEDULED functions DO exist on the Free plan ('available on all pricing plans'), but have a 30-second execution limit",
+      "detail": "Netlify Scheduled Functions docs state explicitly: 'Pricing Information: This feature is available on all pricing plans' and 'Scheduled Functions are enabled by default for all accounts.' They use crontab-format expressions in UTC (e.g. '0 0 * * *' or '@daily'); @reboot and @annually are unsupported. Execution limits: 'Scheduled execution limit | 30 seconds' (Synchronous execution limit is 60 seconds). So scheduling is free, but the 30-second cap means a single daily LLM pipeline step that takes longer than 30s will be terminated.",
+      "source_url": "https://docs.netlify.com/build/functions/scheduled-functions/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Netlify scheduled functions consume credits as 'compute' (10 credits per GB-hour), and Netlify's DB/storage equivalents exist on Free: Netlify Blobs (key/value + blob) and Netlify Database (Postgres)",
+      "detail": "Scheduled functions are billed under the compute metric (GB-hours at 10 credits/GB-hour, default 1024 MB allocation). Free plan includes 'Netlify Database and Blob storage' and lists 'Netlify Database | 3 databases' on Free. Netlify Database is 'available on Credit-based plans only' and consumes credits for compute and bandwidth, though 'database storage space is free until July 1, 2026.' Netlify Blobs is a key/value + unstructured store available on all plans. So Netlify DOES have free DB/storage equivalents to D1/KV — but they are metered via credits, not given as flat free quotas.",
+      "source_url": "https://docs.netlify.com/build/functions/usage-and-billing.md",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "Netlify LEGACY Free/Starter plan (accounts created before Sept 4, 2025) had flat quotas: 300 build minutes/month, 100 GB/month bandwidth, 125k function invocations per site/month",
+      "detail": "Legacy pricing plans table: 'Bandwidth 100 GB/month (hard limit on Free)'; 'Build minutes 300 minutes/month (hard limit on Free)'; 'Serverless Functions 125k invocations per site/month'; 'Edge Functions 1M invocations/month'; 'Concurrent builds 1'. This matters practically: if the user's Netlify account predates Sept 4, 2025, they may still be on Legacy and daily deploys would be fine (300 build min covers ~30 small builds). Switching to Credit-based is irreversible and would then break on the 15-credit/deploy cap.",
+      "source_url": "https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-legacy-plans/legacy-pricing-plans/",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "GitHub Actions free minutes: 2,000 minutes/month on GitHub Free for PRIVATE repos; UNLIMITED free for standard runners on PUBLIC repos",
+      "detail": "'GitHub Free | Artifact storage 500 MB | Minutes (per month) 2,000 | Cache storage 10 GB'. 'The use of standard GitHub-hosted runners is free: In public repositories...'. Usage is free for self-hosted runners and public repos with standard GitHub-hosted runners. A once-daily job of ~5 minutes = ~150 minutes/month, comfortably inside the 2,000-minute private-repo allowance; public repos are unlimited. Note 'Larger runners are always charged for, even when used by public repositories.'",
+      "source_url": "https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "GitHub Actions cron reliability: schedule is NOT guaranteed — it can be delayed during high load (worst at the top of the hour), queued jobs may be dropped, and minimum interval is 5 minutes",
+      "detail": "Official docs: 'The schedule event can be delayed during periods of high loads of GitHub Actions workflow runs. High load times include the start of every hour. If the load is sufficiently high enough, some queued jobs may be dropped. To decrease the chance of delay, schedule your workflow to run at a different time of the hour.' 'The shortest interval you can run scheduled workflows is once every 5 minutes.' 'Scheduled workflows will only run on the default branch.' For a once-daily job, pick an off-peak minute (e.g. '17 6 * * *') and make the job idempotent; exact start time cannot be relied on.",
+      "source_url": "https://docs.github.com/en/actions/reference/events-that-trigger-workflows",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "GitHub Actions: scheduled workflows in a PUBLIC repo are auto-disabled after 60 days with no repository activity",
+      "detail": "Official docs: 'In a public repository, scheduled workflows are automatically disabled when no repository activity has occurred in 60 days.' A pipeline that commits its daily output counts as activity and therefore self-sustains; a purely read-only pipeline that never commits could be disabled after 60 days and must be re-enabled. The current docs state this behavior for public repos specifically.",
+      "source_url": "https://docs.github.com/en/actions/reference/events-that-trigger-workflows",
+      "verified_date": "2026-09-13"
+    },
+    {
+      "claim": "GitHub Actions does not support @daily/@hourly/@weekly shorthands; only 5-field POSIX cron (with optional IANA timezone)",
+      "detail": "Docs note: 'GitHub Actions does not support the non-standard syntax @yearly, @monthly, @weekly, @daily, @hourly, and @reboot.' A timezone field is supported for DST-aware scheduling. Relevant because Netlify/Cloudflare-style '@daily' must be written as '0 6 * * *' on GitHub.",
+      "source_url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax",
+      "verified_date": "2026-09-13"
+    }
+  ],
+  "comparison_table_markdown": "| Dimension | Cloudflare (Free) | Netlify (Free, Credit-based since 2025-09-04) | GitHub Actions (Free) |\n|---|---|---|---|\n| Scheduler | Cron Triggers, Workers-only (NOT on Pages); up to 5/account; 1-min min granularity; runs on UTC | Scheduled Functions — available on ALL plans incl. Free; crontab UTC; **30 s execution limit** | `on: schedule` cron; 5-min min; exact time NOT guaranteed (delays, possible dropped runs) |\n| Daily-job cost | 1 cron invocation/day — free | compute 10 credits/GB-hr — free-ish, but see deploy row | free (2,000 min/mo private; unlimited public) |\n| Publishing (build+deploy) | Workers Static Assets / Pages: 500 builds/mo (Pages), 1 concurrent, 20-min timeout. Git-triggered daily = ~30 builds | **15 credits per PRODUCTION deploy** → only ~20 deploys/mo on 300 credits; daily (30/mo = 450) EXCEEDS | build happens in the runner, no host build quota |\n| Free allowance | 100,000 Worker req/day (reset 00:00 UTC); **static-asset reqs free & unlimited** | **300 credits/mo, HARD limit**, no recharge, no card | 2,000 min/mo + 500 MB artifacts + 10 GB cache |\n| Compute limit per invocation | **10 ms CPU** (cron & HTTP); IO/network wait excluded; 128 MB mem | Functions 60 s synchronous / **30 s scheduled**; default 1024 MB | 6 h per job; no CPU-time cap |\n| Subrequests | **50 per invocation** | n/a (not the constraint) | n/a |\n| Database free tier | **D1: 5M rows read/day, 100k rows written/day, 5 GB, 10 DBs, 500 MB/DB** | Netlify Database (Postgres): Credit-based plans only; consumes credits for compute+bandwidth; storage free until 2026-07-01; Free = 3 databases | none (use external) |\n| KV / blob free tier | **KV: 100k reads/day, 1k writes/day, 1k deletes/day, 1 GB, 25 MiB value** | Netlify Blobs (KV/unstructured) on all plans; metered via credits | none |\n| Object storage + egress | **R2: 10 GB, 1M Class A/mo, 10M Class B/mo, EGRESS FREE** | via Blobs / credits | none |\n| Queue | **Queues on Free: 10,000 ops/day, 24 h retention (fixed)** | none native | none |\n| Credit card required | No | No (Free plan 'never charged') | No |\n| Failure mode when exceeded | Error 1027 (reqs), Error 1102 (CPU), D1/KV ops error until daily reset | **Site(s) PAUSED until next cycle — account-wide** | job fails / minutes billed (private) |\n| Verdict for 1 job/day + mostly-static site | ✅ Comfortable (watch 10 ms CPU) | ❌ Daily production deploy blows the 300-credit cap | ✅ Best free scheduler for the heavy pipeline |",
+  "recommendation": "Split the workload: run the DAILY PIPELINE on GitHub Actions and host the static site on Cloudflare. (1) Scheduler/worker: GitHub Actions `on: schedule` on a PUBLIC repo (minutes free & unlimited) or private (2,000 min/mo free) — use an off-peak cron minute like '17 6 * * *', make the job idempotent, and accept that start time may slip and runs can occasionally be dropped; ensure a commit happens so the public-repo 60-day inactivity disable never triggers. This avoids Cloudflare's 10 ms CPU / 50-subrequest caps and Netlify's credit meter entirely, and gives you 6-hour jobs. (2) Hosting: deploy the built Astro output to Cloudflare — ideally Workers Static Assets (20,000 files, 25 MiB/file, static requests FREE and unlimited, no build quota) or Pages if you prefer Git integration (500 builds/mo, fine for 30/mo). (3) Data: use D1 for the article index (5M reads + 100k writes/day free, 5 GB) and R2 for images/assets (10 GB, 1M Class A ops, free egress). KV is available (100k reads/day, only 1k writes/day) if you need a cache. Do NOT build the daily pipeline as a Cloudflare Cron Trigger Worker alone if it does heavy JSON aggregation/parsing — 10 ms CPU is the one hard limit that could trip it, and Queues on Free caps retention at 24 h. AVOID Netlify for this project on the current Free plan: 15 credits per production deploy × ~30 daily publishes (450) exceeds the 300-credit hard cap, and when exceeded the entire account pauses until the next cycle. The one exception: if the Netlify account predates 2025-09-04 and is still on a Legacy plan (300 build minutes + 100 GB bandwidth flat), daily deploys are fine — but switching to Credit-based is irreversible, so decide before migrating. Finally, no credit card is required on any of the three Free tiers.",
+  "unverified": [
+    "What EXACTLY happens when the Cloudflare Pages Free limit of 500 builds/month is exceeded (builds blocked vs. queued vs. error) — the Pages limits page only says to 'refer to the Cloudflare plans page' for removing limits; no explicit behavior statement found.",
+    "Whether Cloudflare Pages Direct Upload / wrangler deployments (as opposed to Git-triggered builds) count against the 500 builds/month quota — not stated in the limits page.",
+    "Whether GitHub's 60-day scheduled-workflow auto-disable also applies to PRIVATE repositories — current docs state it only for public repositories ('In a public repository, scheduled workflows are automatically disabled when no repository activity has occurred in 60 days'); private-repo behavior could not be confirmed from official docs.",
+    "Explicit flat free-tier quotas (GB stored / operation counts) for Netlify Blobs — the docs express all usage via the credits model and publish no separate Blobs storage/operation quota.",
+    "Cloudflare Cron Trigger start-time precision / SLA — docs say triggers 'run on underutilized machines' but publish no guaranteed-precision or documented-delay statement (unlike GitHub, which documents delays).",
+    "Cloudflare Pages pricing page URL (developers.cloudflare.com/pages/platform/pricing/) returned 404 / no content during verification, so no Pages-specific paid-tier pricing was read directly; Pages Free limits were confirmed from the Pages Limits page instead.",
+    "Whether Netlify scheduled functions specifically continue to run while a team is credit-paused (the docs describe pausing as account/site-wide for web projects, which implies scheduled functions also stop, but the docs do not name scheduled functions explicitly in the pause behavior)."
+  ],
+  "blockers": [
+    "NETLIFY (current Free / Credit-based plan): Each production deploy costs 15 credits and the Free plan hard-caps at 300 credits/month with no recharge option. A once-daily publish = ~30 deploys/month = 450 credits (before compute/bandwidth/requests), i.e. ~50% over the cap. When credits run out, the site — and ALL projects on the account — get PAUSED until the next billing cycle. Netlify Free cannot sustain this daily pipeline.",
+    "CLOUDFLARE WORKERS FREE CPU: 10 ms CPU time per invocation (HTTP and Cron Triggers), which is a hard cap for inline aggregation/parsing of many sources. LLM/network calls are excluded from CPU, but JSON parsing, prompt assembly, and serialization are not — a heavy pipeline risks Error 1102. Mitigation: do the heavy work in GitHub Actions and only deploy static output to Cloudflare.",
+    "CLOUDFLARE WORKERS FREE SUBREQUEST CAP: 50 subrequests per invocation caps how many sources can be fetched in a single Cron-Trigger run (a single CI job has no such cap).",
+    "CLOUDFLARE PAGES HAS NO CRON TRIGGERS: Pages alone cannot host the scheduled job; you must add a separate Worker (or use GitHub Actions as the scheduler) if you host on Pages.",
+    "CLOUDFLARE QUEUES FREE RETENTION: message retention is fixed at 24 hours on Free (not configurable to the Paid 4-14 days), which breaks any retry/delay design longer than a day.",
+    "NETLIFY SCHEDULED FUNCTION 30-SECOND LIMIT: a daily LLM pipeline step exceeding 30 s is terminated; it would need to be chunked across invocations or offloaded.",
+    "GITHUB ACTIONS CRON: schedule timing is not guaranteed (delays during high load, worst at the top of the hour; queued runs may be dropped), and in PUBLIC repos scheduled workflows are auto-disabled after 60 days without repository activity. Design the job to be idempotent, off-peak, and self-generating activity.",
+    "NETLIFY PLAN-TYPE AMBIGUITY: an existing account created before 2025-09-04 may be on a Legacy plan (300 build min/month flat) where daily deploys work fine; migrating to Credit-based is IRREVERSIBLE and would then break. Confirm the account's plan before committing to Netlify."
+  ]
+}
+```
