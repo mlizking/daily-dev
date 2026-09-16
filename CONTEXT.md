@@ -51,3 +51,27 @@ _Avoid_: preview, pending, unpublished
 **Published Issue**:
 An Issue that has been made public. It never changes afterwards.
 _Avoid_: live, released, final
+
+**Tier**:
+A Source's position in the Run's critical path: a Tier 1 Source's failure fails the Run, a Tier 2 Source's failure is recorded and ignored.
+_Avoid_: priority, class, level, rank
+
+**Watermark**:
+The newest Item timestamp already retrieved from a Source, used to fetch only what is new.
+_Avoid_: cursor, offset, checkpoint, last-seen
+
+**Cluster**:
+A group of Items reporting the same underlying event from different Sources.
+_Avoid_: duplicate, group, merge, thread
+
+**Candidate**:
+An Item that has survived Seen detection and is being considered by the Editorial Gate.
+_Avoid_: entry, applicant, shortlist
+
+**Editorial Gate**:
+The rule that decides which Candidates reach an Issue.
+_Avoid_: filter, ranking, selection, curation
+
+**Correction**:
+A published statement that an earlier Issue was wrong.
+_Avoid_: edit, fix, update, erratum
