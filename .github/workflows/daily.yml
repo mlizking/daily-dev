@@ -1,0 +1,68 @@
+name: Daily
+
+# One workflow, one job, one place a failure surfaces (ADR-0003).
+#
+# The Run and the deploy deliberately share a job: if the Issue is generated but the
+# deploy fails, that must be visible as a single red run rather than as a green run
+# that left the site stale.
+#
+# `schedule` and `workflow_dispatch` will additionally perform the Run (fetch, gate,
+# write). `push` deliberately does NOT — a push is either a human change to the site
+# or the Run's own content commit, and re-running the pipeline on either would loop.
+
+on:
+  schedule:
+    # 23:45 UTC = 06:45 Asia/Bangkok. Off-peak minute (GitHub's own docs warn that the
+    # top of the hour is congested and runs may be delayed or dropped), and it leaves
+    # ~15 minutes of slack before the intended 07:00 publish.
+    - cron: '45 23 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'content/**'
+      - 'public/**'
+      - 'pipeline/**'
+      - 'astro.config.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'wrangler.jsonc'
+      - 'tsconfig.json'
+      - '.github/workflows/daily.yml'
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # Astro 7 requires Node >= 22.12.
+          node-version: '22.x'
+          cache: npm
+
+      - run: npm ci
+
+      # The Run (pipeline/run.ts) goes here once it exists. It is guarded to the
+      # scheduled and manual triggers so that a content commit does not re-run it.
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
