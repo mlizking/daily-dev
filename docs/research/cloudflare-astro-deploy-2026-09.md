@@ -64,6 +64,39 @@ API token permission scope: **Workers Scripts: Edit** (account-scoped).
 
 `cloudflare/pages-action` is deprecated — do not use it.
 
+## Custom domain
+
+The zone `mlizking.dev` is already in this Cloudflare account, so the Worker is attached to
+`daily.mlizking.dev` as a **Custom Domain** (not a Route). Cloudflare then creates the DNS record
+and issues the certificate on its own — no manual DNS or TLS work.
+
+```jsonc
+{
+  "name": "daily-dev",
+  "routes": [
+    { "pattern": "daily.mlizking.dev", "custom_domain": true }
+  ]
+}
+```
+
+Rules that bite:
+
+- The **zone must be active and in the same account** as the Worker.
+- A Custom Domain **cannot be created on a hostname that already has a CNAME record** — delete any
+  existing `daily` record first. (Route patterns and Custom Domains are different features; a Route
+  needs a DNS record, a Custom Domain creates one.)
+- Worker `name` accepts **alphanumeric characters and dashes only** — no dots, no underscores
+  (≤63 characters if the `*.workers.dev` subdomain is in use). So the Worker is named `daily-dev`,
+  and `daily.mlizking.dev` is purely routing.
+- `workers_dev` defaults to `true`. Set it to `false` once the custom domain is confirmed working,
+  so only one canonical URL exists. (`preview_urls` defaults to the value of `workers_dev`.)
+- The **`Edit Cloudflare Workers` token template includes `Workers Routes Write` on the Zone**, so
+  the API token's **Zone resources must include `mlizking.dev`**. An account-scoped-only token will
+  deploy the Worker but fail to attach the domain.
+- `account_id` can live in `wrangler.jsonc` or be supplied via the `CLOUDFLARE_ACCOUNT_ID`
+  environment variable — the CI job uses the secret.
+- `main` is optional for an assets-only Worker; it is required for every other kind.
+
 ## Free-tier limits that matter
 
 - 20 000 files per Worker version (100 000 paid); 25 MiB per individual file.
