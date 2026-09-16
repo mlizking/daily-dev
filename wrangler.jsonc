@@ -1,0 +1,28 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "daily-dev",
+  "compatibility_date": "2025-09-01",
+
+  // The *.workers.dev URL stays on as a sanity check until the Custom Domain is
+  // confirmed working, then flips to false so exactly one canonical URL exists (ADR-0012).
+  "workers_dev": true,
+
+  // A Custom Domain, not a Route: Cloudflare creates the DNS record and the
+  // certificate itself. Cannot be created if a CNAME already exists for this hostname.
+  "routes": [
+    {
+      "pattern": "daily.mlizking.dev",
+      "custom_domain": true
+    }
+  ],
+
+  // No `main`: this is an assets-only Worker. Static asset requests are free and
+  // do not consume the 100,000 requests/day Worker quota.
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

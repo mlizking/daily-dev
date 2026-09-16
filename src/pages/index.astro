@@ -1,0 +1,54 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const issues = (await getCollection('issues')).sort((a, b) =>
+  a.data.date < b.data.date ? 1 : -1,
+);
+const latest = issues[0];
+const archive = issues.slice(1, 21);
+---
+
+<Base>
+  {
+    latest ? (
+      <>
+        <h1>ฉบับล่าสุด</h1>
+        <p>
+          <a href={`/${latest.data.date}/`}>{latest.data.date}</a>
+        </p>
+        <p class="muted">
+          ครอบคลุม {latest.data.windowStart.toISOString()} ถึง{' '}
+          {latest.data.windowEnd.toISOString()}
+        </p>
+      </>
+    ) : (
+      /*
+       * The honest pre-launch state. An archive with no Issues yet says so rather
+       * than showing a stale one or an error — a gap must never look like a quiet day.
+       */
+      <>
+        <h1>Daily Dev Brief</h1>
+        <p class="empty">ยังไม่มีฉบับที่เผยแพร่</p>
+        <p class="muted">
+          เมื่อ Run แรกทำงานเสร็จ ฉบับแรกจะปรากฏที่นี่ พร้อมช่วงเวลาที่มันครอบคลุม
+        </p>
+      </>
+    )
+  }
+
+  {
+    archive.length > 0 && (
+      <>
+        <h2>ฉบับก่อนหน้า</h2>
+        <ul>
+          {archive.map((issue) => (
+            <li>
+              <a href={`/${issue.data.date}/`}>{issue.data.date}</a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+</Base>

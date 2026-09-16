@@ -5,3 +5,5 @@ dist/
 .obsidian/
 .env
 .env.*
+.wrangler/
+pagefind/

@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const issues = await getCollection('issues');
+  return issues.map((issue) => ({
+    params: { date: issue.data.date },
+    props: { issue },
+  }));
+}
+
+const { issue } = Astro.props;
+const { data } = issue;
+---
+
+<Base title={data.date}>
+  <p><a href="/">← ฉบับล่าสุด</a></p>
+  <h1>{data.date}</h1>
+  <p class="muted">
+    ครอบคลุม {data.windowStart.toISOString()} ถึง {data.windowEnd.toISOString()}
+  </p>
+
+  {
+    data.corrections.length > 0 && (
+      <section>
+        <h2>คำแก้ไข</h2>
+        <ul>
+          {data.corrections.map((c) => (
+            <li>{c}</li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <article set:html={issue.body} />
+
+  <p class="muted">เขียนโดย {data.writerModel}</p>
+</Base>
