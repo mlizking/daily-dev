@@ -1,14 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Issue from '../components/Issue.astro';
 import { TAG_LABELS } from '../lib/site';
 import { allTags } from '../../pipeline/sources';
 
-const issues = (await getCollection('issues')).sort((a, b) =>
-  a.data.date < b.data.date ? 1 : -1,
-);
+const issues = (await getCollection('issues')).sort((a, b) => (a.data.date < b.data.date ? 1 : -1));
 const latest = issues[0];
-const archive = issues.slice(1, 21);
+const older = issues.slice(1);
 
 // Only tags that have appeared in a published Issue, so the home page never links to an empty page.
 const usedTags = allTags().filter((tag) =>
@@ -16,18 +15,14 @@ const usedTags = allTags().filter((tag) =>
 );
 ---
 
-<Base>
+<Base description={latest?.data.intro ?? undefined}>
   {
     latest ? (
       <>
-        <h1>ฉบับล่าสุด</h1>
-        <p>
-          <a href={`/${latest.data.date}/`}>{latest.data.date}</a>
-        </p>
         <p class="muted">
-          ครอบคลุม {latest.data.windowStart.toISOString()} ถึง{' '}
-          {latest.data.windowEnd.toISOString()}
+          ฉบับล่าสุด · <a href={`/${latest.data.date}/`}>{latest.data.date}</a>
         </p>
+        <Issue issue={latest} showDate={false} />
       </>
     ) : (
       /*
@@ -55,22 +50,20 @@ const usedTags = allTags().filter((tag) =>
   }
 
   {
-    archive.length > 0 && (
-      <>
-        <h2>ฉบับก่อนหน้า</h2>
-        <ul>
-          {archive.map((issue) => (
-            <li>
-              <a href={`/${issue.data.date}/`}>{issue.data.date}</a>
-            </li>
-          ))}
-        </ul>
-      </>
+    older.length > 0 && (
+      <p>
+        <a href="/archive/">ฉบับก่อนหน้าทั้งหมด ({older.length})</a>
+      </p>
     )
   }
 </Base>
 
 <style>
+  .tags {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
   .tags a {
     margin-right: 0.6rem;
   }

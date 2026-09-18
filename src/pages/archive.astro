@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const issues = (await getCollection('issues')).sort((a, b) => (a.data.date < b.data.date ? 1 : -1));
+---
+
+<Base title="ฉบับก่อนหน้า">
+  <h1>ฉบับก่อนหน้า</h1>
+
+  {
+    issues.length === 0 ? (
+      <p class="empty">ยังไม่มีฉบับที่เผยแพร่</p>
+    ) : (
+      <ul class="archive">
+        {issues.map((issue) => {
+          const thaiChars =
+            [
+              issue.data.intro ?? '',
+              ...issue.data.categories.map((c) => c.commentary ?? ''),
+              ...issue.data.items.map((i) => i.analysisTh ?? ''),
+            ]
+              .join('')
+              .match(/[\u0E00-\u0E7F]/g)?.length ?? 0;
+          return (
+            <li>
+              <a href={`/${issue.data.date}/`}>{issue.data.date}</a>
+              <span class="muted">
+                {' '}
+                · {issue.data.items.length} รายการ · ราว {Math.round(thaiChars / 678)} นาที
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    )
+  }
+
+  <p><a href="/">← ฉบับล่าสุด</a></p>
+</Base>
+
+<style>
+  .archive {
+    padding-left: 1.2rem;
+  }
+  .archive li {
+    margin-bottom: 0.35rem;
+  }
+</style>

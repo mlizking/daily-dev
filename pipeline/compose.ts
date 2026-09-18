@@ -119,6 +119,12 @@ export async function composeIssue(opts: {
   batchSize?: number;
   /** Bounded, so a stubborn model cannot spin the Run. */
   maxPasses?: number;
+  /**
+   * Tightening gets more passes than deepening. Measured, a tighten pass removes about 9%
+   * of the Issue's length, so reaching a ceiling from a bad overshoot needs more of them
+   * than reaching a floor from a small undershoot.
+   */
+  maxTightenPasses?: number;
   log?: (message: string) => void;
 }): Promise<ComposeOutcome> {
   const { client, model, issue, batchSize = 6, maxPasses = 3, maxTightenPasses = 5 } = opts;

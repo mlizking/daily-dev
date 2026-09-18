@@ -10,10 +10,14 @@ import type { Issue } from './types.ts';
 
 const argv = process.argv.slice(2);
 const has = (name: string) => argv.includes(`--${name}`);
-const val = (name: string, fallback?: string) => {
+// Overloaded so a caller that passes a fallback gets a `string` back rather than having to
+// pretend the flag might have been absent.
+function val(name: string, fallback: string): string;
+function val(name: string): string | undefined;
+function val(name: string, fallback?: string): string | undefined {
   const hit = argv.find((a) => a.startsWith(`--${name}=`));
   return hit ? hit.slice(name.length + 3) : fallback;
-};
+}
 
 const dryRun = has('dry-run');
 const record = has('record');

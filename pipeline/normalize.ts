@@ -114,7 +114,11 @@ export function normalize(source: SourceDef, raw: RawRecord, fetchedAt: string):
     publishedAt: toIso(raw.publishedAt) || fetchedAt,
     fetchedAt,
     category: raw.category ?? source.category,
-    tags: source.tags ?? [],
+    // Copied, not shared. Every Item from one Source would otherwise hold the same array,
+    // and editing one Item's tags would silently edit its siblings'. The YAML writer also
+    // notices the shared reference and emits an anchor and an alias, which turns committed
+    // content into something that cannot be edited by hand without breaking it.
+    tags: [...(source.tags ?? [])],
     primaryRecord,
     severity: raw.severity ?? 'unknown',
     points: raw.points,

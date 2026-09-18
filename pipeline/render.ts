@@ -63,7 +63,11 @@ export function renderIssue(issue: Issue): { filename: string; content: string }
     items: issue.categories.flatMap((s) => s.items.map(itemForFrontmatter)),
   };
 
-  const yaml = toYaml(frontmatter, { lineWidth: 0 });
+  // Committed Markdown is edited by hand and reviewed in diffs. The YAML writer will
+  // otherwise replace a repeated value with an anchor and an alias — `tags: &a1` in one Item
+  // and `tags: *a1` in another — which reads badly, and breaks the file the moment anyone
+  // deletes the Item that happened to hold the anchor.
+  const yaml = toYaml(frontmatter, { lineWidth: 0, aliasDuplicateObjects: false });
   return {
     filename: `${issue.date}.md`,
     content: `---\n${yaml}---\n`,

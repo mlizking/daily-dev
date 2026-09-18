@@ -410,8 +410,9 @@ export async function writeIssue(input: WriterInput): Promise<WriterOutcome> {
 
   // A nomination that did not survive the drop would leave Technique of the Day empty, so it
   // is withdrawn and the Rule gets its chance to fill it.
-  let techniqueItemId = data.techniqueItemId ?? null;
-  if (techniqueItemId && droppedForNoAnalysis.some((id) => id.startsWith(techniqueItemId))) {
+  const nominatedId = data.techniqueItemId ?? null;
+  let techniqueItemId = nominatedId;
+  if (nominatedId && droppedForNoAnalysis.includes(nominatedId)) {
     techniqueItemId = null;
   }
   if (techniqueItemId) promoteToTechnique(issue, techniqueItemId);
