@@ -10,7 +10,7 @@ import { normalize } from './normalize.ts';
 import { renderIssue, issuePath } from './render.ts';
 import { clusterKeyOf, markSeen } from './seen.ts';
 import { loadSeen, loadState, pruneSeen, reportToState, writeState } from './state.ts';
-import { advisorySources } from './sources.ts';
+import { advisorySources, practiceSources } from './sources.ts';
 import type { SourceDef } from './sources.ts';
 import type { Item, Issue, RunResult, SourceReport, Tier } from './types.ts';
 import { writeIssue } from './write.ts';
@@ -134,7 +134,13 @@ export async function runOnce(opts: RunOptions): Promise<RunOutcome> {
 
   const seen = markSeen(allItems, priorSeen, opts.now);
   const tierById = new Map(opts.sources.map((s) => [s.id, s.tier as Tier]));
-  const gate = applyGate(seen.candidates, (id) => tierById.get(id) ?? 2, windowEnd, advisorySources());
+  const gate = applyGate(
+    seen.candidates,
+    (id) => tierById.get(id) ?? 2,
+    windowEnd,
+    practiceSources(),
+    advisorySources(),
+  );
 
   const issue: Issue = {
     date: bangkokDate(opts.now),

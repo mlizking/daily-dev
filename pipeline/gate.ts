@@ -107,23 +107,31 @@ const CVE_RE = /\bCVE-\d{4}-\d{4,7}\b/i;
  * Whether this Item must cite a Primary Record.
  *
  * The rule protects a reader from being told a vulnerability is patched when it is not, so it
- * binds Items that make a claim about a specific vulnerability: anything from an advisory
- * Source, and anything — from anywhere — that names a CVE. It deliberately does not bind a
- * DevSecOps practice article, which has no CVE to cite and asserts nothing about one. Applied
- * to the whole Category, as it first was, the rule dropped twenty practice articles in a single
- * Run and left Security with nothing but advisories.
+ * binds Items that make a claim about a specific vulnerability — not Items that discuss doing
+ * security work. The first version bound the whole Category, and dropped twenty DevSecOps
+ * practice articles in a single Run.
+ *
+ * The exemption is an allowlist: only a Source marked `practice` is exempt, and even then an
+ * Item that names a CVE must cite one. Everything else in Security — advisories, and any
+ * Source nobody has read yet — must cite a Primary Record. Written the other way round, as it
+ * first was, a new security Source would be trusted by default, and its failure mode would be
+ * an unbacked claim in front of a reader rather than a line in the Run log.
  */
-export function needsPrimaryRecord(item: Item, advisorySourceIds: Set<string>): boolean {
+export function needsPrimaryRecord(item: Item, practiceSourceIds: Set<string>): boolean {
   if (item.category !== 'security') return false;
-  if (advisorySourceIds.has(item.sourceId)) return true;
-  if (CVE_RE.test(item.title)) return true;
-  return item.facts.some((f) => CVE_RE.test(f.text));
+
+  const namesACve =
+    CVE_RE.test(item.title) || item.facts.some((f) => CVE_RE.test(f.text));
+
+  if (practiceSourceIds.has(item.sourceId)) return namesACve;
+  return true;
 }
 
 export function applyGate(
   items: Item[],
   tierOfSource: (sourceId: string) => Tier,
   windowEnd: Date,
+  practiceSourceIds: Set<string>,
   advisorySourceIds: Set<string>,
 ): GateResult {
   const dropped: DroppedItem[] = [];
@@ -131,7 +139,7 @@ export function applyGate(
 
   for (const item of items) {
     // Enforced in code, not in a prompt, so it cannot be softened by rewording (ADR-0008).
-    if (needsPrimaryRecord(item, advisorySourceIds) && !item.primaryRecord) {
+    if (needsPrimaryRecord(item, practiceSourceIds) && !item.primaryRecord) {
       dropped.push({ item, reason: 'security claim with no Primary Record' });
       continue;
     }

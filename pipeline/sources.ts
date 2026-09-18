@@ -42,6 +42,18 @@ export type SourceDef = {
    * practice articles in a single Run, which is why the Category had nothing but advisories.
    */
   advisory?: boolean;
+  /**
+   * Whether this Source publishes guidance rather than claims, and is therefore exempt from the
+   * Primary Record requirement unless it names a CVE.
+   *
+   * The exemption is an allowlist, and it is written as one deliberately. Under the first
+   * version of the rule a Source was exempt unless it was marked advisory, so a new security
+   * Source would have been trusted by default — and its failure mode would have been a
+   * vulnerability claim reaching a reader unbacked, which is the one thing ADR-0008 exists to
+   * prevent. Now the default is the strict one, and only a Source that has been read and marked
+   * is exempt: a new Source fails visibly in the Run log instead of silently in front of a reader.
+   */
+  practice?: boolean;
   config?: Record<string, unknown>;
 };
 
@@ -61,6 +73,17 @@ export const PRIMARY_RECORD_SOURCES = new Set(['cisa-kev', 'ghsa', 'nvd', 'osv']
 /** Sources that assert facts about specific vulnerabilities, rather than how to do security work. */
 export function advisorySources(): Set<string> {
   return new Set(SOURCES.filter((s) => s.advisory).map((s) => s.id));
+}
+
+/**
+ * Sources whose Security Items are guidance rather than claims, and so are exempt from the
+ * Primary Record requirement unless the Item names a CVE.
+ *
+ * Everything not in this set needs a Primary Record. The strict default is the point: an
+ * unread Source must fail in the Run log, not in front of a reader.
+ */
+export function practiceSources(): Set<string> {
+  return new Set(SOURCES.filter((s) => s.practice).map((s) => s.id));
 }
 
 /** Repos whose releases are worth knowing about the day they ship. */
@@ -172,6 +195,7 @@ export const SOURCES: SourceDef[] = [
     endpoint: 'https://openssf.org/feed/',
     tags: ['devsecops', 'supply-chain'],
     technique: true,
+    practice: true,
   },
   {
     id: 'github-security-blog',
@@ -182,6 +206,7 @@ export const SOURCES: SourceDef[] = [
     endpoint: 'https://github.blog/security/feed/',
     tags: ['devsecops'],
     technique: true,
+    practice: true,
   },
   {
     id: 'devto-devsecops',
@@ -191,6 +216,7 @@ export const SOURCES: SourceDef[] = [
     adapter: 'feed',
     endpoint: 'https://dev.to/feed/tag/devsecops',
     tags: ['devsecops'],
+    practice: true,
   },
   {
     id: 'devto-security',
@@ -200,6 +226,7 @@ export const SOURCES: SourceDef[] = [
     adapter: 'feed',
     endpoint: 'https://dev.to/feed/tag/security',
     tags: ['devsecops'],
+    practice: true,
   },
   {
     id: 'github-releases-devsecops',
