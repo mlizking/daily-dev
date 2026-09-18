@@ -105,4 +105,6 @@ export type SourceReport = {
   newItems: number;
   error?: string;
   ms: number;
+  /** What the adapter discarded, so filtering is visible rather than silent. */
+  notes?: string[];
 };

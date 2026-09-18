@@ -71,7 +71,8 @@ export const WRITER_JSON_SCHEMA = {
     },
     techniqueItemId: {
       type: ['string', 'null'],
-      description: 'The id of the single most actionable item, or null.',
+      description:
+        'The id of the single Item a reader can act on today with the least extra reading, or null if none qualifies. It moves to Technique of the Day.',
     },
   },
 } as const;
@@ -111,6 +112,7 @@ Hard rules, in order of importance:
 11. No preamble. No "in this issue". No mention of being an AI, a model, or a pipeline.
 12. Thai prose should read like a knowledgeable colleague explaining something, not like a translation. Keep the English technical terms Thai developers actually use — deploy, patch, release, breaking change, runtime.
 13. Do not repeat the title back as the Analysis.
+14. Technique of the Day. Nominate at most one Item — the single one a reader can put to work today with the least additional reading: a concrete technique, a migration step, a configuration change, an API that replaces hand-rolled code. Return its id as techniqueItemId. It will be moved out of its own Category, so write it up once, not twice. If nothing qualifies, return null: a missing Technique is better than a manufactured one, and the page will say the Category was empty.
 
 Commentary: for a Category with no Items, the commentary MUST be an empty string. The page states that a Category was empty; that sentence is not yours to write.`;
 

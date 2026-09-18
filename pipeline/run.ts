@@ -91,7 +91,7 @@ export async function runOnce(opts: RunOptions): Promise<RunOutcome> {
 
   for (const source of opts.sources) {
     const started = Date.now();
-    const { records, error } = await runSource(source, ctx);
+    const { records, error, notes } = await runSource(source, ctx);
     const fetchedAt = opts.now.toISOString();
     const items = records.map((r) => normalize(source, r, fetchedAt));
     allItems.push(...items);
@@ -104,11 +104,13 @@ export async function runOnce(opts: RunOptions): Promise<RunOutcome> {
       newItems: 0,
       error,
       ms: Date.now() - started,
+      notes: notes.length ? notes : undefined,
     });
     log(
       `${error ? '✗' : items.length ? '•' : '·'} ${source.id.padEnd(18)} ` +
         `${error ? `failed: ${error}` : `${items.length} items`}`,
     );
+    for (const note of notes) log(`    ↳ ${note}`);
   }
 
   const tier1 = reports.filter((r) => r.tier === 1);

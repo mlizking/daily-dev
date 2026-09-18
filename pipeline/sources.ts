@@ -55,8 +55,22 @@ const WATCHED_REPOS = [
   'golang/go',
   'rust-lang/rust',
   'python/cpython',
+];
+
+/**
+ * AI tooling keeps its own Source rather than joining the list above, because a Source
+ * carries one Category and these belong to ai-for-dev. Two Sources sharing an adapter is
+ * cheaper than teaching the registry to vary a Category per target.
+ */
+const WATCHED_AI_REPOS = [
+  'modelcontextprotocol/servers',
+  'langchain-ai/langchain',
+  'huggingface/transformers',
+  'ollama/ollama',
+  'vllm-project/vllm',
   'anthropics/anthropic-sdk-python',
   'openai/openai-node',
+  'ggml-org/llama.cpp',
 ];
 
 /** Packages whose publish is a signal worth catching the day it happens. */
@@ -164,6 +178,34 @@ export const SOURCES: SourceDef[] = [
     adapter: 'feed',
     endpoint: 'https://github.com/{target}/releases.atom',
     targets: WATCHED_REPOS,
+  },
+  {
+    id: 'github-releases-ai',
+    name: 'GitHub releases (watched AI repos)',
+    tier: 1,
+    category: 'ai-for-dev',
+    adapter: 'feed',
+    endpoint: 'https://github.com/{target}/releases.atom',
+    targets: WATCHED_AI_REPOS,
+  },
+  {
+    id: 'arxiv-cs-ai',
+    name: 'arXiv cs.AI daily announcements',
+    tier: 1,
+    category: 'ai-for-dev',
+    adapter: 'feed',
+    endpoint: 'https://export.arxiv.org/rss/cs.AI',
+  },
+  {
+    id: 'google-news-anthropic',
+    name: 'Google News — anthropic.com',
+    tier: 1,
+    category: 'ai-for-dev',
+    adapter: 'feed',
+    // Google News has no feed for a vendor that publishes none, but it indexes the vendor.
+    // Caveat: its links are news.google.com redirects, so an Item from here reaches the
+    // article through Google rather than pointing at it directly.
+    endpoint: 'https://news.google.com/rss/search?q=site:anthropic.com&hl=en-US&gl=US&ceid=US:en',
   },
   {
     id: 'npm-packages',

@@ -97,15 +97,20 @@ export async function composeIssue(opts: {
   maxPasses?: number;
   log?: (message: string) => void;
 }): Promise<ComposeOutcome> {
-  const { client, model, issue, batchSize = 6, maxPasses = 2 } = opts;
+  const { client, model, issue, batchSize = 8, maxPasses = 3 } = opts;
   const log = opts.log ?? (() => {});
 
   const writer = await writeIssue({ client, model, issue });
   let length = measureIssue(issue);
   log(`length after first write: ${length.chars} Thai chars (${length.verdict})`);
 
+  // Aim at the middle of the band, not at its floor. Measured: the writer's per-Item length
+  // falls as the Item count rises — 12 Items averaged 407 characters, 16 averaged 440, and
+  // 19 averaged 285 — so the total does not grow with breadth and the deepening pass is the
+  // only lever that moves it. Stopping at the floor would leave the Issue at the very bottom
+  // of the band, where a Run's ordinary variance puts it below again.
   let deepenPasses = 0;
-  while (length.chars < ISSUE_CHARS.min && deepenPasses < maxPasses) {
+  while (length.chars < ISSUE_CHARS.target && deepenPasses < maxPasses) {
     const targets = pickTargets(issue, length.perItem, batchSize);
     if (targets.length === 0) break;
 

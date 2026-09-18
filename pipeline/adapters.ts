@@ -2,6 +2,7 @@ import { XMLParser } from 'fast-xml-parser';
 import type { HttpClient } from './http.ts';
 import type { RawRecord } from './normalize.ts';
 import { stripTags, toIso } from './normalize.ts';
+import { judgeRelevance } from './relevance.ts';
 import type { AdapterId, SourceDef } from './sources.ts';
 
 export type AdapterContext = {
@@ -9,12 +10,23 @@ export type AdapterContext = {
   windowStart: Date;
   windowEnd: Date;
   now: Date;
+  /** For adapters to report what they discarded, so filtering is visible rather than silent. */
+  note?: (message: string) => void;
 };
 
 export type Adapter = (source: SourceDef, ctx: AdapterContext) => Promise<RawRecord[]>;
 
 /** Cap per Source: a flood from one feed must not crowd out everything else. */
 const MAX_PER_SOURCE = 120;
+
+/**
+ * Cap per target, for multi-target Sources.
+ *
+ * llama.cpp publishes a release tag for every build — `b11033`, `b11034`, `b11035`, `b11036`
+ * — so four consecutive build numbers filled an entire Category with noise. Two is enough to
+ * know a project shipped without letting one project's tag habit speak for the day.
+ */
+const MAX_PER_TARGET = 2;
 
 const xml = new XMLParser({
   ignoreAttributes: false,
@@ -186,11 +198,25 @@ const hn: Adapter = async (source, ctx) => {
   if (res.status !== 200) throw new Error(`HTTP ${res.status}`);
   const doc = JSON.parse(res.body) as { hits?: Array<Record<string, unknown>> };
   const out: RawRecord[] = [];
+  let offTopic = 0;
+  const samples: string[] = [];
+
   for (const hit of asArray(doc.hits)) {
     const objectId = String(hit.objectID ?? '');
     const title = String(hit.title ?? '');
     if (!objectId || !title) continue;
     const external = typeof hit.url === 'string' && hit.url ? hit.url : '';
+
+    // Hacker News is a general aggregator. Without this, a popular story about an earthquake
+    // outranks a quiet one about a compiler and reaches a developer's briefing.
+    // The title alone: a URL would match "http" in every scheme and approve everything.
+    const verdict = judgeRelevance(title);
+    if (!verdict.relevant) {
+      offTopic += 1;
+      if (samples.length < 3) samples.push(`${title} (${verdict.why})`);
+      continue;
+    }
+
     const points = Number(hit.points ?? 0);
     out.push({
       nativeId: objectId,
@@ -204,6 +230,10 @@ const hn: Adapter = async (source, ctx) => {
       category: 'industry-trends',
     });
   }
+
+  if (offTopic > 0) {
+    ctx.note?.(`dropped ${offTopic} off-topic story(ies), e.g. ${samples.join(' | ')}`);
+  }
   return out;
 };
 
@@ -215,6 +245,7 @@ const feed: Adapter = async (source, ctx) => {
 
   const out: RawRecord[] = [];
   for (const url of urls) {
+    let taken = 0;
     let body: string;
     try {
       const res = await ctx.http.get(url);
@@ -241,6 +272,8 @@ const feed: Adapter = async (source, ctx) => {
       : asArray(feedNode?.entry as Array<Record<string, unknown>>);
 
     for (const entry of entries) {
+      if (source.targets?.length && taken >= MAX_PER_TARGET) break;
+
       const title = stripTags(text(entry.title));
       const link = linkOf(entry);
       if (!title || !link) continue;
@@ -261,6 +294,7 @@ const feed: Adapter = async (source, ctx) => {
         publishedAt,
         kind: 'verbatim',
       });
+      taken += 1;
       if (out.length >= MAX_PER_SOURCE) return out;
     }
   }
@@ -381,13 +415,18 @@ const ADAPTERS: Record<AdapterId, Adapter> = {
 export async function runSource(
   source: SourceDef,
   ctx: AdapterContext,
-): Promise<{ records: RawRecord[]; error?: string }> {
+): Promise<{ records: RawRecord[]; error?: string; notes: string[] }> {
   const adapter = ADAPTERS[source.adapter];
-  if (!adapter) return { records: [], error: `no adapter named ${source.adapter}` };
+  if (!adapter) return { records: [], error: `no adapter named ${source.adapter}`, notes: [] };
+  const notes: string[] = [];
   try {
-    const records = await adapter(source, ctx);
-    return { records: records.slice(0, MAX_PER_SOURCE) };
+    const records = await adapter(source, { ...ctx, note: (m) => notes.push(m) });
+    return { records: records.slice(0, MAX_PER_SOURCE), notes };
   } catch (error) {
-    return { records: [], error: error instanceof Error ? error.message : String(error) };
+    return {
+      records: [],
+      error: error instanceof Error ? error.message : String(error),
+      notes,
+    };
   }
 }
