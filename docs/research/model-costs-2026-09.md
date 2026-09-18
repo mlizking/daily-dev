@@ -37,6 +37,34 @@ requests — comfortably inside even a free-model cap.
 Triage-role cost is negligible at every price point: `deepseek/deepseek-v4-flash` costs
 **$0.16/month** and `google/gemini-2.5-flash-lite` costs **$0.22/month**.
 
+## Measured bake-off, 2026-09-18
+
+Same Facts, same prompt, one Issue each, 12 Items across four Categories. The three
+candidates were chosen by the user: `qwen/qwen3.8-flash`, `deepseek/deepseek-v4.1-flash`,
+`google/gemini-2.5-flash`.
+
+| Model | Wall clock | Items with prose | Cost for the Issue | Projected per month |
+| --- | --- | --- | --- | --- |
+| `qwen/qwen3.8-flash` | 219.4 s | 12 / 12 | $0.0078 | ~$0.23 |
+| `deepseek/deepseek-v4.1-flash` | 118.9 s | **0 / 12** | $0.0028 | ~$0.08 |
+| `google/gemini-2.5-flash` | **19.8 s** | 12 / 12 | $0.0086 | ~$0.26 |
+
+`deepseek/deepseek-v4.1-flash` returned a schema-valid response containing no prose at all —
+empty Analyses and empty Commentary — and the Run correctly reported 12 degraded Items rather
+than publishing a plausible-looking empty Issue. It is eliminated.
+
+A mechanical check for unsupported claims — every CVE identifier and version-like token in an
+Analysis must appear verbatim in that Item's Facts — found **zero** unsupported tokens across
+the 24 Analyses that were produced. The facts-only constraint held where it can be checked.
+
+Two observations worth carrying forward:
+
+- The spread in wall clock is 11×. The Run has a twenty-minute ceiling, so the slowest
+  candidate leaves far less room for the retry the writer already needs.
+- `qwen/qwen3.8-flash` wrote the empty-Category message itself ("ไม่มีข้อมูลใหม่ในหมวดนี้วันนี้").
+  That phrasing must be deterministic — it is a statement about our Gate, not about the world —
+  so the renderer should own it and the prompt should stop inviting the model to write it.
+
 ## Verdict
 
 A two-tier Run costs **$0.40–7.20 per month** depending on the writer, so the stated $5–10
