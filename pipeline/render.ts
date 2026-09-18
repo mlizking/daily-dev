@@ -1,6 +1,19 @@
-import { stringify as toYaml } from 'yaml';
+import { stringify as toYaml, Scalar } from 'yaml';
 import type { Issue, Item } from './types.ts';
 import { CATEGORIES } from '../src/lib/taxonomy.ts';
+
+/**
+ * A string that must survive YAML as a string.
+ *
+ * An unquoted `2026-09-18` in frontmatter is a date, and the content loader hands it to the
+ * schema as a Date object — so the Issue's own date, which is the key its URL is built from,
+ * arrived as a timestamp and the build refused it. Quoting says what we mean.
+ */
+function literal(value: string): Scalar {
+  const scalar = new Scalar(value);
+  scalar.type = 'QUOTE_DOUBLE';
+  return scalar;
+}
 
 /**
  * An Issue's structure lives in frontmatter; the page renders from it.
@@ -20,9 +33,10 @@ function itemForFrontmatter(item: Item) {
     title: item.title,
     url: item.url,
     sourceId: item.sourceId,
-    publishedAt: item.publishedAt,
+    publishedAt: literal(item.publishedAt),
     severity: item.severity ?? 'unknown',
     score: item.score ?? 0,
+    tags: item.tags ?? [],
     ...(item.primaryRecord ? { primaryRecord: item.primaryRecord } : {}),
     ...(item.alsoReportedBy?.length ? { alsoReportedBy: item.alsoReportedBy } : {}),
     facts: item.facts.map((f) => ({ text: f.text, lang: f.lang, kind: f.kind, url: f.url })),
@@ -33,7 +47,7 @@ function itemForFrontmatter(item: Item) {
 
 export function renderIssue(issue: Issue): { filename: string; content: string } {
   const frontmatter = {
-    date: issue.date,
+    date: literal(issue.date),
     windowStart: issue.windowStart,
     windowEnd: issue.windowEnd,
     generatedAt: issue.generatedAt,

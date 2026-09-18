@@ -1,0 +1,53 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Item from '../../components/Item.astro';
+import { TAG_LABELS } from '../../lib/site';
+import { allTags } from '../../../pipeline/sources';
+
+/**
+ * A tag page: one cross-cutting thread across every Issue.
+ *
+ * The six Categories are the Issue's fixed sections; tags are how a reader follows a topic
+ * that runs through several of them — CNCF, DevSecOps, using AI well — without the Issue
+ * needing a seventh section that would be empty on a quiet day.
+ */
+export async function getStaticPaths() {
+  return allTags().map((tag) => ({ params: { tag }, props: { tag } }));
+}
+
+const { tag } = Astro.props;
+const issues = (await getCollection('issues')).sort((a, b) => (a.data.date < b.data.date ? 1 : -1));
+const hits = issues
+  .map((issue) => ({ issue, items: issue.data.items.filter((i) => i.tags.includes(tag)) }))
+  .filter((h) => h.items.length > 0);
+---
+
+<Base title={TAG_LABELS[tag] ?? tag}>
+  <p><a href="/">← ฉบับล่าสุด</a></p>
+  <h1>{TAG_LABELS[tag] ?? tag}</h1>
+  <p class="muted">{hits.length} ฉบับ · {hits.reduce((n, h) => n + h.items.length, 0)} รายการ</p>
+
+  {
+    hits.map((h) => (
+      <section>
+        <h2>
+          <a href={`/${h.issue.data.date}/`}>{h.issue.data.date}</a>
+        </h2>
+        {h.items.map((item) => (
+          <Item item={item} />
+        ))}
+      </section>
+    ))
+  }
+</Base>
+
+<style>
+  section {
+    margin-top: 2rem;
+  }
+  h2 {
+    font-size: 1rem;
+    margin: 0 0 0.75rem;
+  }
+</style>

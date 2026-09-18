@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import type { ChatMessage, ModelClient } from './model.ts';
-import type { CategorySection, Issue } from './types.ts';
+import type { CategoryId, CategorySection, Issue, Item } from './types.ts';
 import { CATEGORIES } from '../src/lib/taxonomy.ts';
+import { techniqueSources } from './sources.ts';
 
 /**
  * The writer produces our words about the day, never the world's. Everything it is
@@ -278,6 +279,42 @@ export async function writeIssue(input: WriterInput): Promise<WriterOutcome> {
   if (techniqueItemId) promoteToTechnique(issue, techniqueItemId);
 
   return { degraded, techniqueItemId, attempts };
+}
+
+/**
+ * Technique of the Day must be present every day, so when the writer nominates nothing the
+ * Rule supplies one rather than leaving the Category empty.
+ *
+ * The writer's nomination is better editorial judgement and is used when it exists. It is
+ * also intermittent — measured across Runs, it nominated an Item on one day and returned null
+ * the next, on identical material. A Category that appears and disappears is worse than one
+ * chosen by a rule a reader can predict, so the rule is the floor and the writer is the
+ * ceiling.
+ *
+ * Among eligible Items, one tagged `ai-technique` wins, because using AI well is the technique
+ * this reader most wants and least often finds. Within that, the highest score wins.
+ */
+export function nominateTechniqueByRule(issue: Issue): Item | null {
+  const technique = issue.categories.find((s) => s.category === 'technique');
+  if (!technique || technique.items.length > 0) return null;
+
+  const eligible = issue.categories
+    .filter((s) => s.category !== 'technique')
+    .flatMap((s) => s.items)
+    // A release feed or an advisory database cannot supply a technique: "wrangler 4.135.0 was
+    // published" is news, not something a reader can do.
+    .filter((i) => techniqueSources().has(i.sourceId));
+
+  if (eligible.length === 0) return null;
+
+  const chosen = [...eligible].sort((a, b) => {
+    const pa = a.tags?.includes('ai-technique') ? 0 : 1;
+    const pb = b.tags?.includes('ai-technique') ? 0 : 1;
+    if (pa !== pb) return pa - pb;
+    return (b.score ?? 0) - (a.score ?? 0) || (a.id < b.id ? -1 : 1);
+  })[0];
+
+  return promoteToTechnique(issue, chosen.id) ? chosen : null;
 }
 
 /**

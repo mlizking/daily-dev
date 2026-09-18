@@ -114,6 +114,7 @@ export function normalize(source: SourceDef, raw: RawRecord, fetchedAt: string):
     publishedAt: toIso(raw.publishedAt) || fetchedAt,
     fetchedAt,
     category: raw.category ?? source.category,
+    tags: source.tags ?? [],
     primaryRecord,
     severity: raw.severity ?? 'unknown',
     points: raw.points,

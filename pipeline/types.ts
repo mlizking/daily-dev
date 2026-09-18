@@ -40,6 +40,8 @@ export type Item = {
   publishedAt: string;
   fetchedAt: string;
   category: CategoryId;
+  /** Cross-cutting topics this Item carries, inherited from its Source. */
+  tags: string[];
   /** Deterministic, from the fixed factor order. */
   score?: number;
   primaryRecord?: PrimaryRecord;

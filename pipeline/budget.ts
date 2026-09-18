@@ -12,9 +12,13 @@
  * Measured behaviour worth knowing before trusting any of these numbers: the writer holds an
  * implicit total length of its own. Raising the per-Item ceiling from 700 to 800 moved the
  * average Item from 407 to 517 characters; raising the quota from four to five moved it back
- * to 371. Neither lever reliably reaches the ceiling, so `ISSUE_CHARS.min` is a target the
- * Run currently misses rather than a floor it holds. Closing that gap needs an enforced pass
- * in code, not a firmer sentence in the prompt.
+ * to 371. Neither lever reliably reaches the ceiling, so the prompt alone cannot hold a band.
+ *
+ * What holds it is measurement. The Run measures the Issue in Thai characters after the first
+ * write, and a bounded pass in code closes the gap: a deepening pass while it is under `min`,
+ * a tightening pass while it is over `max`. The tightening pass was measured cutting an
+ * 8,816-character Issue to 6,415 — 27% — across three passes, so a Run that overshoots badly
+ * still lands inside the band rather than shipping a reading time it does not have.
  */
 
 export type Band = { min: number; target: number; max: number };

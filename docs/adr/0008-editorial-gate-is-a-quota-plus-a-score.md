@@ -7,3 +7,5 @@ A global ranking would let a busy news day crowd out security entirely, and no C
 ## Consequences
 
 The Issue's shape is stable and testable. A security Item without a Primary Record is dropped, not downgraded — the rule lives in code, not in a prompt.
+
+**Amendment.** "A security Item without a Primary Record" was too broad, and measuring showed it: one Run dropped twenty Items under this rule, every one of them a DevSecOps practice article — how to do supply-chain security, how to threat-model — none of which asserts anything about a specific vulnerability and none of which could cite a CVE. The rule now binds the Items it was written for: anything from an advisory Source, and anything from anywhere that names a CVE. A practice article about threat modelling is admitted; a practice article that mentions CVE-2026-1234 is still dropped unless it can cite a Primary Record. The safety property is unchanged — no reader is told a vulnerability is patched when it is not — while the Category can now carry guidance as well as advisories.

@@ -7,3 +7,5 @@ Reddit access goes through Arctic Shift at Tier 2 rather than the official API: 
 ## Consequences
 
 Adding a Source is cheap and carries no risk, so the registry can grow without the Run's reliability decaying. A Source that dies silently degrades one corner of the Issue instead of stopping publication.
+
+**Amendment.** Tier 1 grew from a dozen Sources to thirty as the Issue's topics widened — cloud-native, DevSecOps, and using AI well each needed several feeds before they could appear on an ordinary day. The original small-list intent was about failure blast radius, and it is preserved by what "failure" means in the code: a Run goes blind only when *no* Tier 1 Source could be retrieved, not when one could not. Thirty reliable feeds are therefore not thirty ways to fail — they are thirty ways to keep publishing. What the growth does cost is time: a Run now spends a couple of minutes fetching, and every added multi-target Source adds another request per target.

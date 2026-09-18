@@ -1,0 +1,131 @@
+---
+/**
+ * One Item, as a reader sees it.
+ *
+ * Facts come first and are shown verbatim, because that is the thing a reader can check.
+ * Analysis comes after and is ours. The order is the point: the origin's words are the
+ * evidence and our words are the commentary (ADR-0006).
+ */
+interface Fact {
+  text: string;
+  kind: 'verbatim' | 'derived';
+  url: string;
+}
+interface ItemShape {
+  id: string;
+  title: string;
+  url: string;
+  sourceId: string;
+  severity: string;
+  score: number;
+  tags: string[];
+  primaryRecord?: { id: string; url: string };
+  alsoReportedBy?: { sourceId: string; url: string }[];
+  facts: Fact[];
+  analysisTh?: string;
+}
+
+const { item } = Astro.props as { item: ItemShape };
+---
+
+<article data-pagefind-body>
+  <h3>
+    <a href={item.url}>{item.title}</a>
+  </h3>
+  <p class="meta">
+    {
+      item.severity !== 'unknown' && (
+        <span class:list={['badge', `sev-${item.severity}`]}>{item.severity}</span>
+      )
+    }
+    {
+      item.tags.map((tag) => (
+        <a class="badge tag" href={`/tag/${tag}/`}>
+          {tag}
+        </a>
+      ))
+    }
+    {
+      item.primaryRecord && (
+        <a class="primary" href={item.primaryRecord.url}>
+          บันทึกต้นทาง: {item.primaryRecord.id}
+        </a>
+      )
+    }
+  </p>
+
+  {
+    item.facts.map((fact) =>
+      fact.kind === 'verbatim' ? (
+        <blockquote>{fact.text}</blockquote>
+      ) : (
+        <p class="derived">{fact.text}</p>
+      ),
+    )
+  }
+
+  {item.analysisTh && <p>{item.analysisTh}</p>}
+
+  {
+    item.alsoReportedBy && item.alsoReportedBy.length > 0 && (
+      <p class="muted small">
+        รายงานโดย: {item.alsoReportedBy.map((r, i) => (
+          <>
+            {i > 0 && ' · '}
+            <a href={r.url}>{r.sourceId}</a>
+          </>
+        ))}
+      </p>
+    )
+  }
+</article>
+
+<style>
+  article {
+    margin: 0 0 1.75rem;
+  }
+  h3 {
+    font-size: 1rem;
+    margin: 0 0 0.35rem;
+  }
+  .meta {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+  }
+  .badge {
+    display: inline-block;
+    border-radius: 4px;
+    padding: 0.05rem 0.4rem;
+    margin-right: 0.35rem;
+    background: var(--border);
+    color: var(--fg);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .sev-critical,
+  .sev-high {
+    background: #b42318;
+    color: #fff;
+  }
+  .sev-medium {
+    background: #b45309;
+    color: #fff;
+  }
+  .tag {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    text-transform: none;
+  }
+  .primary {
+    font-size: 0.75rem;
+  }
+  .derived {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .small {
+    font-size: 0.8rem;
+  }
+</style>

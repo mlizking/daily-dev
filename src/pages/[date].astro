@@ -1,6 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Item from '../components/Item.astro';
+import { CATEGORIES } from '../lib/taxonomy';
+import { EMPTY_CATEGORY_MESSAGE } from '../lib/site';
 
 export async function getStaticPaths() {
   const issues = await getCollection('issues');
@@ -12,18 +15,33 @@ export async function getStaticPaths() {
 
 const { issue } = Astro.props;
 const { data } = issue;
+
+// Sections come from the Issue's own record of its Categories, so an empty Category is
+// printed as empty rather than omitted (ADR-0008).
+const sections = data.categories.map((c) => ({
+  ...c,
+  label: CATEGORIES.find((x) => x.id === c.category)?.labelTh ?? c.category,
+  items: data.items.filter((i) => i.category === c.category),
+}));
+
+const thaiChars = [data.intro ?? '', ...data.categories.map((c) => c.commentary ?? ''), ...data.items.map((i) => i.analysisTh ?? '')]
+  .join('')
+  .match(/[\u0E00-\u0E7F]/g)?.length ?? 0;
 ---
 
-<Base title={data.date}>
+<Base title={data.date} description={data.intro ?? undefined}>
   <p><a href="/">← ฉบับล่าสุด</a></p>
   <h1>{data.date}</h1>
   <p class="muted">
-    ครอบคลุม {data.windowStart.toISOString()} ถึง {data.windowEnd.toISOString()}
+    ครอบคลุม {data.windowStart.toISOString()} ถึง {data.windowEnd.toISOString()} ·
+    ราว {Math.round(thaiChars / 678)} นาที · {data.items.length} รายการ
   </p>
+
+  {data.intro && <p class="intro">{data.intro}</p>}
 
   {
     data.corrections.length > 0 && (
-      <section>
+      <section class="corrections">
         <h2>คำแก้ไข</h2>
         <ul>
           {data.corrections.map((c) => (
@@ -34,7 +52,38 @@ const { data } = issue;
     )
   }
 
-  <article set:html={issue.body} />
+  {
+    sections.map((section) => (
+      <section>
+        <h2>{section.label}</h2>
+        {section.commentary && <p>{section.commentary}</p>}
+        {section.empty ? (
+          <p class="empty">{EMPTY_CATEGORY_MESSAGE}</p>
+        ) : (
+          section.items.map((item) => <Item item={item} />)
+        )}
+      </section>
+    ))
+  }
 
   <p class="muted">เขียนโดย {data.writerModel}</p>
 </Base>
+
+<style>
+  .intro {
+    font-size: 1.05rem;
+  }
+  section {
+    margin-top: 2rem;
+  }
+  h2 {
+    font-size: 1.05rem;
+    margin: 0 0 0.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .corrections {
+    border-left: 3px solid #b45309;
+    padding-left: 0.75rem;
+  }
+</style>

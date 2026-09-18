@@ -1,12 +1,19 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import { TAG_LABELS } from '../lib/site';
+import { allTags } from '../../pipeline/sources';
 
 const issues = (await getCollection('issues')).sort((a, b) =>
   a.data.date < b.data.date ? 1 : -1,
 );
 const latest = issues[0];
 const archive = issues.slice(1, 21);
+
+// Only tags that have appeared in a published Issue, so the home page never links to an empty page.
+const usedTags = allTags().filter((tag) =>
+  issues.some((i) => i.data.items.some((item) => item.tags.includes(tag))),
+);
 ---
 
 <Base>
@@ -38,6 +45,16 @@ const archive = issues.slice(1, 21);
   }
 
   {
+    usedTags.length > 0 && (
+      <p class="tags">
+        หัวข้อ: {usedTags.map((tag) => (
+          <a href={`/tag/${tag}/`}>{TAG_LABELS[tag] ?? tag}</a>
+        ))}
+      </p>
+    )
+  }
+
+  {
     archive.length > 0 && (
       <>
         <h2>ฉบับก่อนหน้า</h2>
@@ -52,3 +69,9 @@ const archive = issues.slice(1, 21);
     )
   }
 </Base>
+
+<style>
+  .tags a {
+    margin-right: 0.6rem;
+  }
+</style>

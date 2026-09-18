@@ -120,7 +120,12 @@ if (bakeoff) {
     draft.writerModel = candidate;
     const started = Date.now();
     try {
-      const res = await composeIssue({ client: model, model: candidate, issue: draft });
+      const res = await composeIssue({
+        client: model,
+        model: candidate,
+        issue: draft,
+        log: (m) => console.log(`    ${m}`),
+      });
       const { content } = renderIssue(draft);
       const slug = candidate.replace(/[^a-z0-9]+/gi, '-');
       const file = join('bakeoff', `${draft.date}.${slug}.md`);
@@ -131,7 +136,7 @@ if (bakeoff) {
       const len = res.length;
       console.log(
         `  ✓ ${candidate.padEnd(32)} ${((Date.now() - started) / 1000).toFixed(1)}s  ` +
-          `degraded=${res.writer.degraded} deepen=${res.deepenPasses}  ` +
+          `degraded=${res.writer.degraded} deepen=${res.deepenPasses} tighten=${res.tightenPasses}  ` +
           `${len.chars} Thai chars ≈ ${len.minutes} min (${len.verdict})  ` +
           `cumulative $${cost.toFixed(4)}  → ${file}`,
       );
