@@ -12,7 +12,7 @@
     "build:site": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "run": "node --env-file-if-exists=.env pipeline/run.ts",
+    "run": "node --env-file-if-exists=.env pipeline/cli.ts",
     "check": "astro check"
   },
   "allowScripts": {
@@ -23,7 +23,10 @@
   "dependencies": {
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.3.2"
+    "astro": "^7.3.2",
+    "fast-xml-parser": "^5.11.1",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "pagefind": "^1.5.2",
