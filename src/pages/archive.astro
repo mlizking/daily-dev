@@ -1,6 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+// The reading speed is the pipeline's measurement. Copying the number here would let the
+// page and the pipeline disagree about how long the Issue takes to read.
+import { THAI_CHARS_PER_MINUTE } from '../../pipeline/budget';
 
 const issues = (await getCollection('issues')).sort((a, b) => (a.data.date < b.data.date ? 1 : -1));
 ---
@@ -27,7 +30,8 @@ const issues = (await getCollection('issues')).sort((a, b) => (a.data.date < b.d
               <a href={`/${issue.data.date}/`}>{issue.data.date}</a>
               <span class="muted">
                 {' '}
-                · {issue.data.items.length} รายการ · ราว {Math.round(thaiChars / 678)} นาที
+                · {issue.data.items.length} รายการ · ราว{' '}
+                {Math.round(thaiChars / THAI_CHARS_PER_MINUTE)} นาที
               </span>
             </li>
           );
