@@ -136,7 +136,9 @@ if (bakeoff) {
       const len = res.length;
       console.log(
         `  ✓ ${candidate.padEnd(32)} ${((Date.now() - started) / 1000).toFixed(1)}s  ` +
-          `degraded=${res.writer.degraded} deepen=${res.deepenPasses} tighten=${res.tightenPasses}  ` +
+          `degraded=${res.writer.degraded} recovered=${res.writer.recovered} ` +
+          `dropped=${res.writer.droppedForNoAnalysis.length} ` +
+          `deepen=${res.deepenPasses} tighten=${res.tightenPasses}  ` +
           `${len.chars} Thai chars ≈ ${len.minutes} min (${len.verdict})  ` +
           `cumulative $${cost.toFixed(4)}  → ${file}`,
       );

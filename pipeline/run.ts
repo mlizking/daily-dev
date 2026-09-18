@@ -157,12 +157,16 @@ export async function runOnce(opts: RunOptions): Promise<RunOutcome> {
 
   // Nothing passed the gate. That is a fact worth publishing, so an Issue still goes out.
   let length = measureIssue(issue);
+  let degraded = 0;
   if (selected > 0 && !opts.skipWriter) {
     const composed = await composeIssue({ client: opts.model, model: opts.writerModel, issue, log });
     length = composed.length;
+    degraded = composed.writer.degraded;
     log(
-      `writer: ${composed.writer.degraded} degraded, ${composed.writer.attempts} attempt(s), ` +
-        `${composed.deepenPasses} deepen pass(es)`,
+      `writer: ${composed.writer.degraded} empty, ${composed.writer.recovered} recovered, ` +
+        `${composed.writer.droppedForNoAnalysis.length} dropped for no Analysis, ` +
+        `${composed.writer.attempts} attempt(s), ${composed.deepenPasses} deepen pass(es), ` +
+        `${composed.tightenPasses} tighten pass(es)`,
     );
   }
 
@@ -222,7 +226,7 @@ export async function runOnce(opts: RunOptions): Promise<RunOutcome> {
       merged: seen.merged,
       selected,
       dropped: gate.dropped,
-      degraded: 0,
+      degraded,
       spendUsd: spend.usd,
       calls: spend.calls,
       length,

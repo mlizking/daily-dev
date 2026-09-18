@@ -84,7 +84,14 @@ jobs:
             echo "nothing to publish"
             exit 0
           fi
-          git commit -m "content: Issue for $(date -u +%F)"
+          # The Issue's own date, not the runner's. They differ for six hours a day: this
+          # Run fires at 23:45 UTC, which is already tomorrow in Bangkok, so `date -u`
+          # labelled the 2026-09-19 Issue as 2026-09-18.
+          ISSUE=$(git diff --cached --name-only -- 'content/issues/*.md' | head -1)
+          LABEL=${ISSUE##*/}
+          LABEL=${LABEL%.md}
+          [ -n "$LABEL" ] || LABEL=$(date -u +%F)
+          git commit -m "content: Issue for ${LABEL}"
           git push
 
       - name: Build

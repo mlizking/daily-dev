@@ -33,6 +33,17 @@ const ResponseSchema = z.object({
   techniqueItemId: z.string().nullable().optional(),
 });
 
+/** The retry asks for Analyses only, for the Items the first pass left empty. */
+const RetrySchema = z.object({
+  items: z.array(
+    z.object({
+      id: z.string(),
+      analysisEn: z.string(),
+      analysisTh: z.string(),
+    }),
+  ),
+});
+
 export const WRITER_JSON_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -149,9 +160,101 @@ type WriterInput = {
 
 export type WriterOutcome = {
   degraded: number;
+  /** Items the first pass left empty and a focused second call recovered. */
+  recovered: number;
+  /** Items still empty after the retry. Dropped rather than published. */
+  droppedForNoAnalysis: string[];
   techniqueItemId: string | null;
   attempts: number;
 };
+
+/** The shape of the focused retry: Analyses only, for the Items that came back empty. */
+const ANALYSIS_JSON_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['items'],
+  properties: {
+    items: {
+      type: 'array',
+      items: {
+        type: 'object',
+        additionalProperties: false,
+        required: ['id', 'analysisEn', 'analysisTh'],
+        properties: {
+          id: { type: 'string' },
+          analysisEn: { type: 'string' },
+          analysisTh: { type: 'string' },
+        },
+      },
+    },
+  },
+} as const;
+
+/**
+ * Ask again for the Items the first pass left without an Analysis.
+ *
+ * The first pass writes every Item in one call, and it occasionally returns one empty —
+ * measured on the first live Run, one Item of twenty came back with no prose at all and was
+ * published as a bare headline, which is the thing the writer's own rules call unacceptable.
+ * A second call carrying only the missing Items is a much smaller task, and the model that
+ * dropped one of twenty when writing twenty rarely drops one of one.
+ */
+async function rewriteMissingAnalyses(input: {
+  client: WriterInput['client'];
+  model: string;
+  items: Item[];
+  maxFactsPerItem: number;
+}): Promise<Map<string, { analysisEn: string; analysisTh: string }>> {
+  const { client, model, items, maxFactsPerItem } = input;
+  const out = new Map<string, { analysisEn: string; analysisTh: string }>();
+  if (items.length === 0) return out;
+
+  let parsed: unknown;
+  try {
+    const reply = await client.complete({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM },
+        {
+          role: 'user',
+          content:
+            'Your previous answer left these Items without an Analysis. Write only these. ' +
+            'Reply with a single JSON object of the form ' +
+            '{"items":[{"id":"...","analysisEn":"...","analysisTh":"..."}]} — no prose, no ' +
+            'fences, no trailing text.\n\n' +
+            JSON.stringify(
+              items.map((i) => ({
+                id: i.id,
+                title: i.title,
+                url: i.url,
+                severity: i.severity ?? 'unknown',
+                primaryRecord: i.primaryRecord ?? null,
+                facts: i.facts.map((f) => f.text).slice(0, maxFactsPerItem),
+              })),
+              null,
+              2,
+            ),
+        },
+      ],
+      jsonSchema: ANALYSIS_JSON_SCHEMA as unknown as Record<string, unknown>,
+      maxTokens: 8000,
+      temperature: 0.2,
+    });
+    parsed = extractJson(reply.text);
+  } catch {
+    return out;
+  }
+
+  const result = RetrySchema.safeParse(parsed);
+  if (!result.success) return out;
+
+  for (const a of result.data.items) {
+    const en = a.analysisEn.trim();
+    const th = a.analysisTh.trim();
+    if (th) out.set(a.id, { analysisEn: en, analysisTh: th });
+  }
+  return out;
+}
 
 export async function writeIssue(input: WriterInput): Promise<WriterOutcome> {
   const { client, model, issue, maxFactsPerItem = 2 } = input;
@@ -259,15 +362,21 @@ export async function writeIssue(input: WriterInput): Promise<WriterOutcome> {
     if (section.empty) section.commentary = undefined;
   }
 
-  // An Item whose Analysis did not come back keeps its Facts and loses only its prose —
-  // the Issue is still renderable and still true (ADR-0006).
+  // An Item the writer left without an Analysis is asked for once more on its own, and then
+  // dropped if it is still empty.
+  //
+  // The first version kept it — "the Issue is still renderable and still true" — and on the
+  // first live Run that published one Item of twenty as a bare headline: a pod was flagged
+  // mid-incident, and nothing else. Facts alone are true but they are not an explanation, and
+  // the writer's own rules call that unacceptable. An Item a reader cannot understand is not
+  // worth publishing, so the retry comes first and the drop is the floor.
   const analyses = new Map(data.items.map((i) => [i.id, i]));
-  let degraded = 0;
+  const missing: Item[] = [];
   for (const section of issue.categories) {
     for (const item of section.items) {
       const a = analyses.get(item.id);
       if (!a || (!a.analysisEn.trim() && !a.analysisTh.trim())) {
-        degraded += 1;
+        missing.push(item);
         continue;
       }
       item.analysisEn = a.analysisEn.trim();
@@ -275,10 +384,39 @@ export async function writeIssue(input: WriterInput): Promise<WriterOutcome> {
     }
   }
 
-  const techniqueItemId = data.techniqueItemId ?? null;
+  let recovered = 0;
+  if (missing.length > 0) {
+    const again = await rewriteMissingAnalyses({ client, model, items: missing, maxFactsPerItem });
+    for (const item of missing) {
+      const a = again.get(item.id);
+      if (!a) continue;
+      item.analysisEn = a.analysisEn;
+      item.analysisTh = a.analysisTh;
+      recovered += 1;
+    }
+  }
+
+  const droppedForNoAnalysis: string[] = [];
+  for (const section of issue.categories) {
+    section.items = section.items.filter((item) => {
+      if (item.analysisTh?.trim()) return true;
+      droppedForNoAnalysis.push(item.id);
+      return false;
+    });
+    // A Category whose every Item was dropped has nothing to show, and says so rather than
+    // rendering an empty section.
+    if (section.items.length === 0) section.empty = true;
+  }
+
+  // A nomination that did not survive the drop would leave Technique of the Day empty, so it
+  // is withdrawn and the Rule gets its chance to fill it.
+  let techniqueItemId = data.techniqueItemId ?? null;
+  if (techniqueItemId && droppedForNoAnalysis.some((id) => id.startsWith(techniqueItemId))) {
+    techniqueItemId = null;
+  }
   if (techniqueItemId) promoteToTechnique(issue, techniqueItemId);
 
-  return { degraded, techniqueItemId, attempts };
+  return { degraded: missing.length, recovered, droppedForNoAnalysis, techniqueItemId, attempts };
 }
 
 /**
