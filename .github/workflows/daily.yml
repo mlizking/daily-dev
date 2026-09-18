@@ -24,6 +24,7 @@ on:
       - 'content/**'
       - 'public/**'
       - 'pipeline/**'
+      - 'state/**'
       - 'astro.config.mjs'
       - 'package.json'
       - 'package-lock.json'
@@ -54,8 +55,37 @@ jobs:
 
       - run: npm ci
 
-      # The Run (pipeline/run.ts) goes here once it exists. It is guarded to the
-      # scheduled and manual triggers so that a content commit does not re-run it.
+      # The Run. Guarded to the scheduled and manual triggers: a push is either a human
+      # change to the site or the Run's own content commit, and re-running the pipeline on
+      # either would loop.
+      #
+      # It must come before Build, because Build is what puts the new Issue on the site.
+      - name: Run
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # Optional, and worth having: without it GitHub's advisory API and NVD both
+          # rate-limit aggressively, and NVD is the slowest Source in the registry.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: node pipeline/cli.ts
+
+      # The Issue and the Run's state are the only things that must survive the runner.
+      # State especially: `state/sources.json` holds the per-Source watermark and
+      # `state/seen.jsonl` the Seen set. Lose them and every Run re-reads the same window
+      # and republishes the same Items.
+      - name: Commit the Issue and the Run's state
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name  "daily-dev[bot]"
+          git config user.email "daily-dev[bot]@users.noreply.github.com"
+          git add content/issues state
+          if git diff --cached --quiet; then
+            echo "nothing to publish"
+            exit 0
+          fi
+          git commit -m "content: Issue for $(date -u +%F)"
+          git push
 
       - name: Build
         run: npm run build
