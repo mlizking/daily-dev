@@ -20,10 +20,10 @@
 export type Band = { min: number; target: number; max: number };
 
 /** The whole Issue: intro, every Category's commentary, and every Analysis. */
-export const ISSUE_CHARS: Band = { min: 9_000, target: 12_000, max: 15_000 };
+export const ISSUE_CHARS: Band = { min: 7_500, target: 9_800, max: 13_000 };
 
 /** One Item's Analysis. */
-export const ANALYSIS_CHARS: Band = { min: 400, target: 600, max: 800 };
+export const ANALYSIS_CHARS: Band = { min: 400, target: 550, max: 800 };
 
 /**
  * An Item that a reader must act on — actively exploited, critical, or a breaking change —
@@ -33,16 +33,20 @@ export const ANALYSIS_CHARS: Band = { min: 400, target: 600, max: 800 };
 export const ANALYSIS_CHARS_PRIORITY_MAX = 1_000;
 
 /** One Category's commentary. */
-export const COMMENTARY_CHARS: Band = { min: 200, target: 300, max: 400 };
+export const COMMENTARY_CHARS: Band = { min: 150, target: 250, max: 350 };
 
 /**
  * Reading speed for Thai technical prose, characters per minute.
  *
- * This is an assumption, not a measurement, and it is the one number in this file that a
- * human can pin down in five minutes by reading an Issue with a timer. Everything else in
- * the budget is derived from it.
+ * Measured, not assumed. The operator read an Issue of 11,754 Thai characters, Thai only,
+ * in 17.33 minutes — 678 characters per minute. The first version of this constant guessed
+ * 900, which made every duration the system reported about a third too short, and made the
+ * Issue look like it was missing its target when it was already past it.
+ *
+ * This is the denominator behind every number in this file. If it is ever re-measured,
+ * the bands below should be recomputed from it rather than adjusted by feel.
  */
-export const THAI_CHARS_PER_MINUTE = 900;
+export const THAI_CHARS_PER_MINUTE = 678;
 
 export function targetReadMinutes(chars: number): number {
   return Math.round((chars / THAI_CHARS_PER_MINUTE) * 10) / 10;

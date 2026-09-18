@@ -5,6 +5,6 @@
 
 export const SITE = {
   title: 'Daily Dev Brief',
-  description: 'สรุปวงการ dev รายวัน อ่านจบในราว 10–15 นาที',
+  description: 'สรุปวงการ dev รายวัน อ่านจบในราว 10–20 นาที',
   origin: 'https://daily.mlizking.dev',
 } as const;

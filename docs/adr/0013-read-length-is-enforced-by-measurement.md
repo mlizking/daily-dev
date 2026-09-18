@@ -8,7 +8,7 @@ So the promise is now a band, ten to twenty minutes, and it is held in code: the
 
 ## Consequences
 
-The reading-speed constant behind the conversion — 900 Thai characters per minute — is an assumption, and it is the one number in the budget a human can pin down in five minutes with a timer. Everything else follows from it.
+The reading-speed constant behind the conversion is no longer an assumption. The operator read an Issue of 11,754 Thai characters, Thai only, in 17.33 minutes — 678 characters per minute. The first version of the constant guessed 900, which made every duration the system reported about a third too short and made the Issue look like it was failing its target when it had already passed it. Re-measuring this number is the first step if the bands ever need revisiting.
 
 The measured length is reported on every Run, so drift is visible rather than assumed. A Run that needs two deepening passes, or that still lands short after them, is a signal that something about the day's material or the prompt has changed.
 
