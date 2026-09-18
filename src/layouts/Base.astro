@@ -56,13 +56,48 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
           title="สลับโหมดสว่าง/มืด"
           aria-label="สลับโหมดสว่าง/มืด"
         ></button>
+        <!--
+          The icon states what the click will do, not what is on now: a page at the reading
+          width shows "expand", and a full-width page shows "collapse". Which one is visible
+          is decided in CSS from `data-width`, so the button works before any script runs.
+        -->
         <button
           id="width-toggle"
           type="button"
           class="toggle"
-          title="ขยายความกว้างเนื้อหาให้เต็มจอ"
-          aria-label="ขยายความกว้างเนื้อหาให้เต็มจอ"
-          aria-pressed="false"></button>
+          title="ขยายเนื้อหาให้เต็มจอ"
+          aria-label="ขยายเนื้อหาให้เต็มจอ"
+          aria-pressed="false"
+        >
+          <svg
+            class="icon icon-expand"
+            viewBox="0 0 16 16"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 2H2v4M10 2h4v4M6 14H2v-4M10 14h4v-4"></path>
+          </svg>
+          <svg
+            class="icon icon-collapse"
+            viewBox="0 0 16 16"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.6"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M2 6h4V2M14 6h-4V2M2 10h4v4M14 10h-4v4"></path>
+          </svg>
+        </button>
       </nav>
     </header>
     <main>
@@ -78,16 +113,20 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
         const themeButton = document.getElementById('theme-toggle');
         const widthButton = document.getElementById('width-toggle');
 
-        // The labels state what the button will do next, not what is on now, so a reader who
-        // cannot see the colours still knows which way the click goes.
         const paint = () => {
           if (themeButton) {
             const dark = el.dataset.theme === 'dark';
             themeButton.textContent = dark ? '☀️' : '🌙';
+            const label = dark ? 'สลับเป็นโหมดสว่าง' : 'สลับเป็นโหมดมืด';
+            themeButton.title = label;
+            themeButton.setAttribute('aria-label', label);
           }
           if (widthButton) {
             const wide = el.dataset.width === 'wide';
-            widthButton.textContent = wide ? 'พอดี' : 'เต็มจอ';
+            // The icon is chosen in CSS; only the words a screen reader reads are set here.
+            const label = wide ? 'ย่อเนื้อหากลับเป็นความกว้างอ่านสบาย' : 'ขยายเนื้อหาให้เต็มจอ';
+            widthButton.title = label;
+            widthButton.setAttribute('aria-label', label);
             widthButton.setAttribute('aria-pressed', String(wide));
           }
         };
@@ -153,6 +192,19 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     box-sizing: border-box;
   }
 
+  /*
+   * The theme change is animated because a hard flip is jarring on a page this long. Only the
+   * three properties that actually change are listed: a blanket `transition: all` would also
+   * animate layout, which makes a page feel slower than it is.
+   */
+  html,
+  html * {
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease;
+  }
+
   body {
     margin: 0 auto;
     padding: 1.5rem 1.25rem 4rem;
@@ -160,6 +212,21 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     color: var(--fg);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans Thai', sans-serif;
     line-height: 1.7;
+    /* The width change animates too, so the reader can see which way the page moved. */
+    transition:
+      background-color 200ms ease,
+      border-color 200ms ease,
+      color 200ms ease,
+      max-width 240ms ease;
+  }
+
+  /* A reader who has asked their system to stop moving things has asked us as well. */
+  @media (prefers-reduced-motion: reduce) {
+    html,
+    html *,
+    body {
+      transition: none;
+    }
   }
 
   header {
@@ -191,6 +258,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
   }
 
   .toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.9rem;
+    min-height: 1.6rem;
     background: none;
     border: 1px solid var(--border);
     border-radius: 0.4rem;
@@ -210,6 +282,27 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
   .toggle:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
+  }
+
+  .toggle .icon {
+    display: block;
+  }
+
+  /*
+   * The icon states what the click will do: expand while the page is at the reading width,
+   * collapse while it is full. Chosen in CSS from `data-width` so the button is correct
+   * before any script runs.
+   *
+   * The selectors carry `.toggle` so they outrank the `display: block` above — written as
+   * plain `.icon-collapse` they would have lost to it, and both icons would have shown.
+   */
+  .toggle .icon-collapse,
+  :root[data-width='wide'] .toggle .icon-expand {
+    display: none;
+  }
+
+  :root[data-width='wide'] .toggle .icon-collapse {
+    display: block;
   }
 
   a {

@@ -23,7 +23,7 @@ Run หนึ่งครั้งได้หนึ่งฉบับ เป็
 | # | ขั้น | ตัดสินอะไร |
 |---|---|---|
 | 1 | **Fetch** | 30 sources ขนานกันต่อ host พร้อม throttle ต่อ host และ conditional GET |
-| 2 | **Normalise** | payload ดิบ → `Item` โดย Facts ถูกคัดมาตรงคำจากต้นทาง ไม่มีการเรียบเรียงใหม่ตรงนี้ |
+| 2 | **Normalise** | payload ดิบ → `Item` โดย Facts ถูกคัดลอกมาตรงคำจากต้นทาง ไม่มีการเรียบเรียงใหม่ตรงนี้ |
 | 3 | **Seen** | watermark ต่อ source → Seen set → cluster key การตัดของซ้ำเป็น deterministic ก่อนจะแตะ model |
 | 4 | **Gate** | ให้คะแนน แล้วตัดด้วยโควตาต่อหมวด ข้อกล่าวอ้างความปลอดภัยที่ไม่มี Primary Record ถูก**ตัดทิ้ง** ไม่ใช่ลดระดับ |
 | 5 | **Write** | model เขียน Analysis ภาษาอังกฤษเป็น canonical ต่อ item แล้วจึงเขียนภาษาไทย |
@@ -115,7 +115,7 @@ npm run run -- --bakeoff=<model>,<model>   # เทียบ writer model
 ## การเพิ่ม source
 
 เพิ่มหนึ่งแถวใน `SOURCES` ที่ `pipeline/sources.ts` เท่านั้น — source คือข้อมูล ไม่ใช่โค้ด
-ให้มันมี `tier`, `category`, `adapter`, `endpoint` และ `tags` ที่มันพาไป
+ให้มันมี `tier`, `category`, `adapter`, `endpoint` และ `tags` ที่มันพามาด้วย
 
 มีสาม flag ที่ควรเข้าใจก่อนตั้ง:
 
@@ -143,7 +143,7 @@ hosting ฟรี: static asset บน Cloudflare Workers ไม่กินโ�
 
 อ่าน `CONTEXT.md` ก่อน — มันคือ glossary และมันนิยามคำที่เอกสารอื่นใช้ จากนั้น:
 
-- `docs/specs/0001-daily-dev-brief.md` — spec: user story, scenario, Out of Scope
+- `docs/specs/0001-daily-dev-brief.md` — spec: user stories, scenarios, Out of Scope
 - `docs/adr/` — บันทึกการตัดสินใจ 14 ฉบับ แต่ละฉบับมีทางเลือกที่ถูกปฏิเสธและเหตุผล
 - `docs/plan.md` — อะไรสร้างแล้ว เรียงตาม dependency
 
@@ -155,7 +155,7 @@ ADR คือส่วนที่น่าสนใจที่สุด มั
 
 ยังไม่ได้ทำ เรียงตามความสำคัญ:
 
-1. **test harness** — pipeline มี seam เดียว (`runOnce`) และมี 9 scenario จาก spec ที่รอกลายเป็น golden-file test pipeline ถูกแก้บ่อยและจะพังเงียบถ้าไม่มี นี่คือสิ่งถัดไป
+1. **test harness** — pipeline มี seam เดียว (`runOnce`) และมี 9 scenarios จาก spec ที่รอกลายเป็น golden-file test pipeline ถูกแก้บ่อยและจะพังเงียบถ้าไม่มี นี่คือสิ่งถัดไป
 2. **flow ของคำแก้ไข** — ADR-0010 บอกว่าข้อผิดพลาดอันตรายถูกแก้ในที่พร้อมบันทึกวันที่ ตัวโมเดลข้อมูลมี `corrections` และยังไม่มีอะไรเขียนลงไป
 3. **`workers_dev: false`** — URL `*.workers.dev` ยังเปิดไว้เป็น sanity check ตอนนี้จึงมีสอง URL ที่เสิร์ฟเว็บเดียวกัน
 
