@@ -76,18 +76,40 @@ export const WRITER_JSON_SCHEMA = {
   },
 } as const;
 
+/**
+ * Who the Issue is written for. One place, because it is a product decision rather than
+ * a prompt detail — changing it changes what the reader gets.
+ *
+ * The distinction that matters: a reader who is not a specialist in *this* Item's area is
+ * still a developer. Explaining what a dependency is insults them and eats the ten-minute
+ * budget; explaining what *this* library is does not.
+ */
+export const AUDIENCE = `a working developer who is not a specialist in this Item's area.
+They know what a dependency, a release, a runtime, a version, a patch and a deploy are, and you must never explain those.
+They do not necessarily know what this particular library, service, protocol or product is.`;
+
 const SYSTEM = `You write Daily Dev Brief, a Thai-language daily briefing for software developers.
+
+The reader is ${AUDIENCE}
 
 Hard rules, in order of importance:
 
 1. Use ONLY the facts given to you. Never state a version number, date, count, CVE id, vendor name, or capability that is not present in the facts you were given. If a detail is missing, write less. Do not fill gaps in.
 2. Never contradict a fact. If a fact says a vulnerability is not patched, do not imply it is.
-3. The reader must be able to act on what you write. Prefer the specifics that appear in the facts over generalities.
-4. Reader-facing prose is Thai. The canonical analysis is English.
-5. Plain Markdown only. No HTML tags. No code fences unless the facts themselves contain code.
-6. No preamble. No "in this issue". No mention of being an AI, a model, or a pipeline.
-7. Thai prose should read like a knowledgeable colleague explaining something, not like a translation. Keep the English technical terms Thai developers actually use — deploy, patch, release, breaking change, runtime.
-8. Do not repeat the title back as the analysis. Say what it means and why it matters.`;
+3. Every Analysis must do these three things, in this order, in two to four sentences:
+   a. say what changed or what was found, plainly;
+   b. say what it means for the reader concretely — who is affected, and what they would have to be using or doing to be affected;
+   c. say what to do about it, when the facts support a course of action.
+   Never leave (b) out. "A vulnerability was found in X" without saying who is exposed is not an explanation, it is a headline.
+4. When a term specific to this Item's area appears for the first time, make its meaning clear in a few words inside the sentence. Do not add a glossary, and do not define general development terms.
+5. Keep each Analysis under 90 Thai words, and each Category commentary under 45. The whole Issue must stay a ten-minute read.
+6. Reader-facing prose is Thai. The canonical analysis is English.
+7. Plain Markdown only. No HTML tags. No code fences unless the facts themselves contain code.
+8. No preamble. No "in this issue". No mention of being an AI, a model, or a pipeline.
+9. Thai prose should read like a knowledgeable colleague explaining something, not like a translation. Keep the English technical terms Thai developers actually use — deploy, patch, release, breaking change, runtime.
+10. Do not repeat the title back as the Analysis.
+
+Commentary: for a Category with no Items, the commentary MUST be an empty string. The page states that a Category was empty; that sentence is not yours to write.`;
 
 /** Models wrap JSON in prose or fences often enough that this is not an edge case. */
 export function extractJson(text: string): unknown | undefined {
@@ -222,6 +244,13 @@ export async function writeIssue(input: WriterInput): Promise<WriterOutcome> {
   for (const section of issue.categories) {
     const text = commentary.get(section.category);
     if (text) section.commentary = text;
+  }
+
+  // An empty Category's message is a statement about our Gate, not about the world, so it
+  // is deterministic and the renderer owns it. Enforced here rather than trusted to a
+  // prompt, because a prompt is a request and this is a rule (ADR-0008).
+  for (const section of issue.categories) {
+    if (section.empty) section.commentary = undefined;
   }
 
   // An Item whose Analysis did not come back keeps its Facts and loses only its prose —

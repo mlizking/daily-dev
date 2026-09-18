@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createHttpClient, type HttpMode } from './http.ts';
+import { createHttpClient, latestFixtureTime, type HttpMode } from './http.ts';
 import { createModelClient } from './model.ts';
 import { renderIssue } from './render.ts';
 import { bangkokDate, runOnce } from './run.ts';
@@ -27,8 +27,13 @@ if (!apiKey) {
   process.exit(2);
 }
 
-const now = new Date();
 const mode: HttpMode = replay ? 'replay' : record ? 'record' : 'live';
+
+// A replay runs at the clock its fixtures were captured at. Otherwise a Source whose URL
+// embeds a time window would be filtered against today's window and silently yield nothing,
+// which is exactly how NVD and Hacker News disappeared from the first replay.
+const frozenClock = replay ? latestFixtureTime('fixtures') : undefined;
+const now = frozenClock ?? new Date();
 
 const http = createHttpClient({
   fixturesDir: 'fixtures',
@@ -51,9 +56,12 @@ const model = createModelClient({
   title: 'Daily Dev Brief',
 });
 
-const writerModel = val('model', process.env.WRITER_MODEL ?? 'qwen/qwen3.8-flash');
+// Pinned by the bake-off of 2026-09-18: complete output, no fabricated tokens, and 11×
+// faster than the alternative, which matters against the Run's twenty-minute ceiling.
+const writerModel = val('model', process.env.WRITER_MODEL ?? 'google/gemini-2.5-flash');
 
 console.log(`Daily Dev Brief — Run for ${bangkokDate(now)} (http=${mode}${dryRun ? ', dry-run' : ''})`);
+console.log(`clock: ${now.toISOString()}${frozenClock ? ' (frozen from fixtures)' : ''}`);
 console.log(`writer: ${bakeoff ?? writerModel}\n`);
 
 const outcome = await runOnce({
