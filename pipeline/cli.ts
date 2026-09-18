@@ -1,11 +1,11 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { composeIssue } from './compose.ts';
 import { createHttpClient, latestFixtureTime, type HttpMode } from './http.ts';
 import { createModelClient } from './model.ts';
 import { renderIssue } from './render.ts';
 import { bangkokDate, runOnce } from './run.ts';
 import { tierOne } from './sources.ts';
-import { writeIssue } from './write.ts';
 import type { Issue } from './types.ts';
 
 const argv = process.argv.slice(2);
@@ -120,15 +120,20 @@ if (bakeoff) {
     draft.writerModel = candidate;
     const started = Date.now();
     try {
-      const res = await writeIssue({ client: model, model: candidate, issue: draft });
+      const res = await composeIssue({ client: model, model: candidate, issue: draft });
       const { content } = renderIssue(draft);
       const slug = candidate.replace(/[^a-z0-9]+/gi, '-');
       const file = join('bakeoff', `${draft.date}.${slug}.md`);
       writeFileSync(file, content);
       const cost = model.spend().usd;
+      // Measured here, not inside the Run: a bake-off deliberately skips the Run's writer,
+      // so the Run's own measurement would read an Issue with no prose in it.
+      const len = res.length;
       console.log(
         `  ✓ ${candidate.padEnd(32)} ${((Date.now() - started) / 1000).toFixed(1)}s  ` +
-          `degraded=${res.degraded}  cumulative $${cost.toFixed(4)}  → ${file}`,
+          `degraded=${res.writer.degraded} deepen=${res.deepenPasses}  ` +
+          `${len.chars} Thai chars ≈ ${len.minutes} min (${len.verdict})  ` +
+          `cumulative $${cost.toFixed(4)}  → ${file}`,
       );
     } catch (error) {
       console.log(`  ✗ ${candidate.padEnd(32)} ${error instanceof Error ? error.message : error}`);

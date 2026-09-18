@@ -96,18 +96,21 @@ Hard rules, in order of importance:
 
 1. Use ONLY the facts given to you. Never state a version number, date, count, CVE id, vendor name, or capability that is not present in the facts you were given. If a detail is missing, write less. Do not fill gaps in.
 2. Never contradict a fact. If a fact says a vulnerability is not patched, do not imply it is.
-3. Every Analysis must do these three things, in this order, in two to four sentences:
+3. Every Analysis must do these three things, in this order:
    a. say what changed or what was found, plainly;
    b. say what it means for the reader concretely — who is affected, and what they would have to be using or doing to be affected;
    c. say what to do about it, when the facts support a course of action.
    Never leave (b) out. "A vulnerability was found in X" without saying who is exposed is not an explanation, it is a headline.
-4. When a term specific to this Item's area appears for the first time, make its meaning clear in a few words inside the sentence. Do not add a glossary, and do not define general development terms.
-5. Keep each Analysis under 90 Thai words, and each Category commentary under 45. The whole Issue must stay a ten-minute read.
-6. Reader-facing prose is Thai. The canonical analysis is English.
-7. Plain Markdown only. No HTML tags. No code fences unless the facts themselves contain code.
-8. No preamble. No "in this issue". No mention of being an AI, a model, or a pipeline.
-9. Thai prose should read like a knowledgeable colleague explaining something, not like a translation. Keep the English technical terms Thai developers actually use — deploy, patch, release, breaking change, runtime.
-10. Do not repeat the title back as the Analysis.
+4. Depth. Write roughly 500 to 800 Thai characters per Analysis — five to eight sentences. An Item a reader must act on (actively exploited, critical, or a change that breaks existing code) may run to about 1,000. Under 400 characters is incomplete unless the Facts genuinely contain nothing more, which is rare: if a Fact names a product, a version, a mechanism or a consequence, the reader wants to know what it means for them.
+5. Answer as much of this as the Facts support, and treat it as the substance of (b): who has to be running what in order to be affected; what actually happens to them if they are; whether a fix, workaround or migration exists; and what the reader would notice. Where a Fact is silent, say less about that part — never guess.
+6. Length must come from substance, never from padding: do not repeat the Facts verbatim, do not restate the title, and never write a sentence whose only job is to fill space — no "it is important to stay up to date", no "this shows the ecosystem is evolving". But do not mistake brevity for safety either: a reader who finishes an Item without knowing whether they are affected has been failed just as surely as one who is bored.
+7. The whole Issue should read in roughly twelve to fifteen minutes: about 10,000 to 14,000 Thai characters across the intro, every Category's commentary, and every Analysis together. Keep the intro under 800 characters and each Category's commentary between 200 and 400.
+8. When a term specific to this Item's area appears for the first time, make its meaning clear in a few words inside the sentence. Do not add a glossary, and do not define general development terms.
+9. Reader-facing prose is Thai. The canonical analysis is English.
+10. Plain Markdown only. No HTML tags. No code fences unless the facts themselves contain code.
+11. No preamble. No "in this issue". No mention of being an AI, a model, or a pipeline.
+12. Thai prose should read like a knowledgeable colleague explaining something, not like a translation. Keep the English technical terms Thai developers actually use — deploy, patch, release, breaking change, runtime.
+13. Do not repeat the title back as the Analysis.
 
 Commentary: for a Category with no Items, the commentary MUST be an empty string. The page states that a Category was empty; that sentence is not yours to write.`;
 

@@ -1,6 +1,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { runSource, type AdapterContext } from './adapters.ts';
+import { measureIssue, type IssueLength } from './budget.ts';
+import { composeIssue } from './compose.ts';
 import { applyGate, selectedCount, type DroppedItem } from './gate.ts';
 import type { HttpClient } from './http.ts';
 import type { ModelClient } from './model.ts';
@@ -46,6 +48,8 @@ export type RunStats = {
   degraded: number;
   spendUsd: number;
   calls: number;
+  /** Measured against the budget, so drift in length is visible instead of assumed. */
+  length: IssueLength;
 };
 
 export type RunOutcome = {
@@ -143,10 +147,20 @@ export async function runOnce(opts: RunOptions): Promise<RunOutcome> {
   log(`\nselected ${selected} of ${seen.candidates.length} candidates`);
 
   // Nothing passed the gate. That is a fact worth publishing, so an Issue still goes out.
+  let length = measureIssue(issue);
   if (selected > 0 && !opts.skipWriter) {
-    const outcome = await writeIssue({ client: opts.model, model: opts.writerModel, issue });
-    log(`writer: ${outcome.degraded} item(s) without analysis`);
+    const composed = await composeIssue({ client: opts.model, model: opts.writerModel, issue, log });
+    length = composed.length;
+    log(
+      `writer: ${composed.writer.degraded} degraded, ${composed.writer.attempts} attempt(s), ` +
+        `${composed.deepenPasses} deepen pass(es)`,
+    );
   }
+
+  log(
+    `length: ${length.chars} Thai chars ≈ ${length.minutes} min ` +
+      `(${length.verdict}; band ${length.band.min}–${length.band.max})`,
+  );
 
   const files: string[] = [];
   if (!opts.dryRun) {
@@ -202,6 +216,7 @@ export async function runOnce(opts: RunOptions): Promise<RunOutcome> {
       degraded: 0,
       spendUsd: spend.usd,
       calls: spend.calls,
+      length,
     },
     files,
   };
@@ -219,6 +234,7 @@ function emptyStats(): RunStats {
     degraded: 0,
     spendUsd: 0,
     calls: 0,
+    length: { chars: 0, minutes: 0, band: { min: 0, target: 0, max: 0 }, verdict: 'short', perItem: [] },
   };
 }
 

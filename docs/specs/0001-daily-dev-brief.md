@@ -27,7 +27,7 @@ Published Issues never change; being wrong is handled by a **Correction** in the
 
 ### The reader
 
-1. As a Thai developer, I want one Issue per day that I can finish in ten minutes, so that I stay current without acquiring a feed-reading habit.
+1. As a Thai developer, I want one Issue per day that I can finish in ten to twenty minutes, so that I stay current without acquiring a feed-reading habit.
 2. As a Thai developer, I want every claim to carry a link to its origin, so that I can verify it before repeating it to anyone.
 3. As a Thai developer, I want to be told the exact time window an Issue covers, so that I know whether I am reading news or yesterday's news.
 4. As a Thai developer, I want the Security Category to contain only vulnerabilities backed by an authoritative record, so that I can safely act on what it says.

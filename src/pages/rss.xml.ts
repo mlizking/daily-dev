@@ -1,6 +1,7 @@
 import rss from '@astrojs/rss';
 import { getCollection } from 'astro:content';
 import type { APIContext } from 'astro';
+import { SITE } from '../lib/site';
 
 export async function GET(context: APIContext) {
   const issues = (await getCollection('issues')).sort((a, b) =>
@@ -8,8 +9,8 @@ export async function GET(context: APIContext) {
   );
 
   return rss({
-    title: 'Daily Dev Brief',
-    description: 'สรุปวงการ dev รายวัน อ่านจบใน 10 นาที',
+    title: SITE.title,
+    description: SITE.description,
     site: context.site!,
     items: issues.map((issue) => ({
       title: issue.data.date,

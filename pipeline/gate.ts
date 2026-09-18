@@ -10,8 +10,22 @@ import { CATEGORY_IDS } from '../src/lib/taxonomy.ts';
  * Issue. A Category with nothing qualifying is recorded as empty rather than filled.
  */
 
-/** At most this many Items per Category, so the Issue stays a ten-minute read. */
-export const QUOTA_MAX = 3;
+/**
+ * At most this many Items per Category.
+ *
+ * Four, not three: the length budget and the quota have to agree. With three, even hitting
+ * the per-Item ceiling everywhere tops out around 10,400 Thai characters, which is short of
+ * the twelve minutes the Issue aims for — the ceiling was unreachable in aggregate, so the
+ * quota was the real limit. Candidates are not scarce: the last Run dropped 292 of 304 for
+ * being outside the quota.
+ *
+ * Not five, although five seems better on paper. Measured: three Items per Category produced
+ * 3,800 characters, four produced 8,300, and five produced 7,400 — the writer holds an
+ * implicit total length of its own, so adding Items makes each one shorter rather than making
+ * the Issue longer. Breadth is a weak lever and so is depth; see `budget.ts` for what that
+ * implies.
+ */
+export const QUOTA_MAX = 4;
 
 /** Below this, an Item is not worth a reader's attention. */
 export const MIN_SCORE = 55;

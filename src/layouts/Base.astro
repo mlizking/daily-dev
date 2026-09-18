@@ -1,12 +1,11 @@
 ---
+import { SITE } from '../lib/site';
+
 interface Props {
   title?: string;
   description?: string;
 }
-const {
-  title = 'Daily Dev Brief',
-  description = 'สรุปวงการ dev รายวัน อ่านจบใน 10 นาที',
-} = Astro.props;
+const { title = SITE.title, description = SITE.description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 
@@ -15,15 +14,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title === 'Daily Dev Brief' ? title : `${title} · Daily Dev Brief`}</title>
+    <title>{title === SITE.title ? title : `${title} · ${SITE.title}`}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" type="application/rss+xml" title="Daily Dev Brief" href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href="/rss.xml" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
     <header>
-      <a href="/" class="brand">Daily Dev Brief</a>
+      <a href="/" class="brand">{SITE.title}</a>
       <nav>
         <a href="/about/">เกี่ยวกับ</a>
         <a href="/rss.xml">RSS</a>
