@@ -2,176 +2,176 @@
   "sources": {
     "cisa-kev": {
       "watermark": "2026-09-18T00:00:00.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "ghsa": {
       "watermark": "2026-09-18T17:59:46.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
-      "lastStatus": "ok",
-      "lastItems": 40
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
+      "lastStatus": "empty",
+      "lastItems": 0
     },
     "nvd": {
-      "watermark": "2026-09-18T20:17:23.343Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-19T23:17:10.673Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
       "lastItems": 100
     },
     "openssf-blog": {
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "github-security-blog": {
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "devto-devsecops": {
-      "watermark": "2026-09-18T17:56:16.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-19T14:15:03.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
-      "lastItems": 3
+      "lastItems": 2
     },
     "devto-security": {
-      "watermark": "2026-09-19T01:25:08.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-20T01:38:34.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
       "lastItems": 12
     },
     "github-releases-devsecops": {
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "github-releases-ai": {
-      "watermark": "2026-09-19T01:25:50.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-20T00:01:46.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
-      "lastItems": 8
+      "lastItems": 6
     },
     "arxiv-cs-ai": {
       "watermark": "2026-09-18T04:00:00.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "google-news-anthropic": {
-      "watermark": "2026-09-18T23:26:15.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-20T00:29:44.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
       "lastItems": 3
     },
     "simon-willison": {
-      "watermark": "2026-09-18T23:57:57.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-19T19:52:02.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
-      "lastItems": 4
+      "lastItems": 3
     },
     "tldr-ai": {
       "watermark": "2026-09-18T00:00:00.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "devto-ai": {
-      "watermark": "2026-09-19T01:32:17.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-20T01:33:53.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
       "lastItems": 12
     },
     "devto-promptengineering": {
-      "watermark": "2026-09-18T07:55:05.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
-      "lastStatus": "empty",
-      "lastItems": 0
+      "watermark": "2026-09-19T11:40:32.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
+      "lastStatus": "ok",
+      "lastItems": 2
     },
     "aws-whats-new": {
       "watermark": "2026-09-18T18:34:00.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
-      "lastStatus": "ok",
-      "lastItems": 7
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
+      "lastStatus": "empty",
+      "lastItems": 0
     },
     "gcp-release-notes": {
       "watermark": "2026-09-18T07:00:00.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "node-releases": {
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "python-releases": {
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "cncf-blog": {
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "kubernetes-blog": {
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "devto-cloudnative": {
-      "watermark": "2026-09-18T06:25:26.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
-      "lastStatus": "empty",
-      "lastItems": 0
+      "watermark": "2026-09-19T09:03:17.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
+      "lastStatus": "ok",
+      "lastItems": 1
     },
     "devto-kubernetes": {
-      "watermark": "2026-09-19T01:14:04.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-19T18:17:27.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
       "lastItems": 12
     },
     "devto-observability": {
-      "watermark": "2026-09-18T22:57:27.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-20T01:16:30.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
-      "lastItems": 5
+      "lastItems": 12
     },
     "github-releases-cncf": {
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "cloudflare-blog": {
       "watermark": "2026-09-18T17:23:58.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
-      "lastStatus": "ok",
-      "lastItems": 1
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
+      "lastStatus": "empty",
+      "lastItems": 0
     },
     "github-releases": {
-      "watermark": "2026-09-18T23:51:13.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-19T23:46:04.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
+      "lastStatus": "ok",
+      "lastItems": 3
+    },
+    "npm-packages": {
+      "watermark": "2026-09-19T18:32:26.422Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
       "lastItems": 2
     },
-    "npm-packages": {
-      "watermark": "2026-09-18T23:52:47.113Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
-      "lastStatus": "ok",
-      "lastItems": 4
-    },
     "hn": {
-      "watermark": "2026-09-19T01:24:13.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "watermark": "2026-09-20T01:35:45.000Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
-      "lastItems": 30
+      "lastItems": 18
     },
     "github-changelog": {
       "watermark": "2026-09-18T20:17:22.000Z",
-      "lastRunAt": "2026-09-19T01:39:38.427Z",
+      "lastRunAt": "2026-09-20T01:42:39.711Z",
       "lastStatus": "ok",
-      "lastItems": 5
+      "lastItems": 1
     }
   },
-  "lastRunAt": "2026-09-19T01:39:38.427Z"
+  "lastRunAt": "2026-09-20T01:42:39.711Z"
 }
