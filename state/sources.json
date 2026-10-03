@@ -1,184 +1,184 @@
 {
   "sources": {
     "cisa-kev": {
-      "watermark": "2026-10-01T00:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T00:00:00.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 1
+      "lastItems": 2
     },
     "ghsa": {
-      "watermark": "2026-10-01T16:29:35.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T23:18:12.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 70
+      "lastItems": 40
     },
     "nvd": {
-      "watermark": "2026-10-01T10:17:16.530Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T10:17:06.947Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 100
     },
     "openssf-blog": {
       "watermark": "2026-09-30T11:25:38.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "github-security-blog": {
       "watermark": "2026-09-28T19:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "devto-devsecops": {
-      "watermark": "2026-10-01T20:31:45.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T12:34:10.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 9
+      "lastItems": 1
     },
     "devto-security": {
-      "watermark": "2026-10-02T02:24:44.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-03T02:02:46.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 12
     },
     "github-releases-devsecops": {
       "watermark": "2026-10-01T13:38:47.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
-      "lastStatus": "ok",
-      "lastItems": 1
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
+      "lastStatus": "empty",
+      "lastItems": 0
     },
     "github-releases-ai": {
-      "watermark": "2026-10-02T02:36:15.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-03T01:58:45.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 8
+      "lastItems": 9
     },
     "arxiv-cs-ai": {
-      "watermark": "2026-10-01T04:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T04:00:00.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 120
     },
     "google-news-anthropic": {
-      "watermark": "2026-10-01T16:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
-      "lastStatus": "ok",
-      "lastItems": 4
-    },
-    "simon-willison": {
-      "watermark": "2026-10-01T06:29:01.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T23:01:00.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 2
     },
+    "simon-willison": {
+      "watermark": "2026-10-01T06:29:01.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
+      "lastStatus": "empty",
+      "lastItems": 0
+    },
     "tldr-ai": {
-      "watermark": "2026-10-01T00:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T00:00:00.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 1
     },
     "devto-ai": {
-      "watermark": "2026-10-02T02:28:52.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-03T02:17:27.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 12
     },
     "devto-promptengineering": {
-      "watermark": "2026-10-01T22:55:29.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T12:02:32.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 8
+      "lastItems": 5
     },
     "aws-whats-new": {
-      "watermark": "2026-10-01T20:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T20:18:00.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 18
+      "lastItems": 9
     },
     "gcp-release-notes": {
-      "watermark": "2026-10-01T07:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T07:00:00.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 1
     },
     "node-releases": {
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "python-releases": {
       "watermark": "2026-10-01T00:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
-      "lastStatus": "ok",
-      "lastItems": 2
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
+      "lastStatus": "empty",
+      "lastItems": 0
     },
     "cncf-blog": {
-      "watermark": "2026-10-02T00:13:19.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T15:22:44.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 5
+      "lastItems": 4
     },
     "kubernetes-blog": {
       "watermark": "2026-09-22T18:00:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "empty",
       "lastItems": 0
     },
     "devto-cloudnative": {
-      "watermark": "2026-10-01T12:00:08.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T08:09:23.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 1
+      "lastItems": 2
     },
     "devto-kubernetes": {
-      "watermark": "2026-10-02T01:26:42.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-03T01:11:35.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 12
     },
     "devto-observability": {
-      "watermark": "2026-10-02T02:30:00.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-03T02:20:59.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 12
     },
     "github-releases-cncf": {
-      "watermark": "2026-10-01T18:48:39.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T19:04:57.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
+      "lastStatus": "ok",
+      "lastItems": 5
+    },
+    "cloudflare-blog": {
+      "watermark": "2026-10-02T16:13:45.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
+      "lastStatus": "ok",
+      "lastItems": 10
+    },
+    "github-releases": {
+      "watermark": "2026-10-02T23:49:43.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
+      "lastStatus": "ok",
+      "lastItems": 8
+    },
+    "npm-packages": {
+      "watermark": "2026-10-02T11:30:47.699Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
       "lastItems": 2
     },
-    "cloudflare-blog": {
-      "watermark": "2026-10-01T15:34:02.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
-      "lastStatus": "ok",
-      "lastItems": 9
-    },
-    "github-releases": {
-      "watermark": "2026-10-02T00:07:46.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
-      "lastStatus": "ok",
-      "lastItems": 10
-    },
-    "npm-packages": {
-      "watermark": "2026-10-01T23:10:23.091Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
-      "lastStatus": "ok",
-      "lastItems": 4
-    },
     "hn": {
-      "watermark": "2026-10-02T02:36:20.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-03T02:22:18.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 41
+      "lastItems": 28
     },
     "github-changelog": {
-      "watermark": "2026-10-01T19:57:39.000Z",
-      "lastRunAt": "2026-10-02T02:35:57.734Z",
+      "watermark": "2026-10-02T22:18:23.000Z",
+      "lastRunAt": "2026-10-03T02:21:36.941Z",
       "lastStatus": "ok",
-      "lastItems": 10
+      "lastItems": 6
     }
   },
-  "lastRunAt": "2026-10-02T02:35:57.734Z"
+  "lastRunAt": "2026-10-03T02:21:36.941Z"
 }
